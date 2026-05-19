@@ -7,7 +7,7 @@ model: sonnet
 
 When writing a PR description:
 
-1. Run git diff main...HEAD (or the appropriate base branch) to see all changes
+1. Run `git diff main...HEAD` (or the appropriate base branch) to see all changes
 2. Analyze the diff to understand what changed and why
 3. Write a description using the **What / Why / Changes** format
 
@@ -28,6 +28,6 @@ Brief context on why this change is needed.
 
 Load these files only when the situation calls for them:
 
-- **For the full template with Testing and Notes sections:** Read references/format-template.md
-- **For real-world examples** (feature, bug fix, refactor): Read references/examples.md
-- **For large PRs** (50+ files or 500+ lines): Read references/large-pr-guidelines.md — it has a structured format with Architecture, Changes by Area, and Risks sections
+- **For the full template with Testing and Notes sections:** Read `references/format-template.md`
+- **For real-world examples** (feature, bug fix, refactor): Read `references/examples.md`
+- **For large PRs** (50+ files or 500+ lines): Read `references/large-pr-guidelines.md` — it has a structured format with Architecture, Changes by Area, and Risks sections
