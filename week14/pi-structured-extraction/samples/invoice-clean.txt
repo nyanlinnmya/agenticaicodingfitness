@@ -1,0 +1,24 @@
+INVOICE
+
+Vendor: Acme Widgets, Inc.
+Invoice #: INV-2026-00412
+Date: April 18, 2026
+Due Date: May 18, 2026
+
+Bill To:
+  Northwind Trading Co.
+  PO Box 1421
+  Seattle, WA 98101
+  Customer ID: CUST-44219
+
+Line Items:
+  1. Widget A (qty 4)  ........  $75.00 each .....  $300.00
+  2. Widget B (qty 2)  ........  $90.00 each .....  $180.00
+  3. Express shipping  ........................  $ 25.00
+
+  Subtotal:  $505.00
+  Tax (7%):   $35.35
+  TOTAL:     $540.35
+
+Payment terms: Net 30
+Notes: Thank you for your business.
