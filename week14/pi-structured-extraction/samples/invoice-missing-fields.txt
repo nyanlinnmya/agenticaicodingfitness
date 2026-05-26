@@ -1,0 +1,12 @@
+INVOICE
+
+From: Bluefin Logistics
+Number: 8842
+Date: 2026-03-02
+
+Charge:
+  Pallet handling .... $120.00
+  Storage (5 days) ... $ 75.00
+  TOTAL .............. $195.00
+
+(No customer ID, no PO, no due date, no tax breakdown listed.)

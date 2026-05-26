@@ -1,0 +1,15 @@
+CHASE BANK · Statement Period 2026-04-01 → 2026-04-30
+Account ending in 8821
+
+POSTED TRANSACTIONS — page 3 of 5
+
+Date         Description                                  Amount      Balance
+─────────────────────────────────────────────────────────────────────────────
+2026-04-30   ACH DEBIT - METRO PARKING ASSOC #29481-A    -$45.00    $1,247.83
+2026-04-29   POS PURCHASE - ACME GROCERY 1247             -$78.42    $1,292.83
+2026-04-28   DIRECT DEPOSIT - PAYROLL                  +$2,840.00    $1,371.25
+
+(Continued on next page. This is one line item from a bank statement, not an
+invoice or a receipt. The "vendor" is implied from the description; there's
+no document the bank produced for any single transaction. document_type
+should be "other" with detail "bank statement transaction.")

@@ -1,0 +1,20 @@
+INVOICE
+
+Vendor: Cypress Hardware Co.
+Invoice #: CYP-7781
+Date: 2026-01-09
+Customer: ID CUST-09812
+
+Items:
+  - Bracket, 6 in.  (qty 10) @ $4.50  =  $45.00
+  - M8 bolt, box of 50    (qty 2) @ $12.00 =  $24.00
+  - Threadlocker, blue, 50ml (qty 1) @ $9.00 = $9.00
+
+Subtotal: $78.00
+Sales tax (8.25%): $6.44
+TOTAL DUE: $150.00
+
+Note: total figure shown on this invoice does not match the line-item sum.
+This document intentionally exercises the dual-extraction self-correction
+pattern — the extractor should report stated_total = $150.00,
+calculated_total = $84.44, and conflict_detected = true.
