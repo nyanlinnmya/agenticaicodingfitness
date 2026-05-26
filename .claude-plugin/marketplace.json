@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace-manifest.json",
+  "name": "agentic-coding-fitness",
+  "owner": {
+    "name": "Agentic Coding Fitness @ Rust Tech Bar",
+    "email": "kwarodom@altotech.ai"
+  },
+  "description": "Learn-by-doing skills that recap the 14-week Agentic Coding Fitness course: LLM APIs, tool use, agent loops, MCP, RAG, multi-agent systems, and knowledge-graph memory.",
+  "version": "1.0.0",
+  "plugins": [
+    {
+      "name": "agentic-coding-fitness",
+      "displayName": "Agentic Coding Fitness Bootcamp",
+      "source": "./plugins/agentic-coding-fitness",
+      "description": "8 concept skills that teach, demo, and run guided labs for everything taught in class: talking to LLMs, tool use, the agent loop, MCP & skills, RAG, multi-agent patterns, agent memory with Neo4j, and choosing models/frameworks.",
+      "version": "1.0.0",
+      "author": { "name": "Agentic Coding Fitness" },
+      "license": "MIT",
+      "keywords": ["ai-agents", "multi-agent", "llm", "rag", "mcp", "knowledge-graph", "education", "anthropic", "claude"],
+      "category": "education"
+    }
+  ]
+}
