@@ -13,6 +13,19 @@ Think of this as a "fitness center" for your coding brain—but instead of lifti
 
 We emphasize a **practice-first** approach (Vibe Coding). No long lectures, just shipping workable solutions that interact with the real world!
 
+## 📚 Catching up? Install the Bootcamp Plugin
+
+Missed a session or want to review at your own pace? We packaged the **entire course** into a shareable **Claude Code plugin** — 8 bite-sized skills (one per concept) that teach the idea, show runnable code, and walk you through a hands-on lab. Just ask Claude in plain English and the right skill loads automatically.
+
+```
+/plugin marketplace add kwarodom/agenticaicodingfitness
+/plugin install agentic-coding-fitness@agentic-coding-fitness
+```
+
+Then try: *"Recap the whole course and tell me which skill to start with."*
+
+Covers: LLM basics · tool use · agent loops · MCP & skills · RAG · multi-agent systems · knowledge-graph memory · choosing models & patterns. See [`plugins/agentic-coding-fitness/`](plugins/agentic-coding-fitness/) for details.
+
 ## 📂 Repository Contents 
 
 The project is structured week-by-week as our complexity scales up:
