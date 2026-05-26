@@ -1,0 +1,21 @@
+Hotel HVAC Incident Log — Energy & Facilities
+
+Room R305 has repeatedly run hot over the past week. The HVAC compressor in
+R305 is overheating during afternoon peak hours, pushing room temperature above
+28C and driving energy consumption above 5 kWh. Maintenance suspects a failing
+condenser fan and a clogged air filter.
+
+Room R101 and Room R203 also run hot but to a lesser degree. R101's thermostat
+appears miscalibrated, reporting 2C below the actual room temperature, so the
+HVAC under-cools the space. R203 shares a riser with R305 and inherits some of
+its heat load.
+
+Two HIGH-severity alerts remain unresolved. Alert AL1 was triggered by the
+R305 HVAC unit for sustained over-temperature. Alert AL2 was triggered by the
+R203 sensor for abnormal energy draw. Both alerts are flagged for the energy
+optimisation team.
+
+Recommended actions: replace the R305 condenser fan, recalibrate the R101
+thermostat, and schedule HVAC pre-cooling before the afternoon occupancy peak
+to flatten the energy curve. Estimated combined saving is roughly 3 to 4 kWh
+per day across the three rooms.

@@ -1,0 +1,5 @@
+Room 301 HVAC unit C-7 triggered a HIGH TEMP alert at 14:23. Technician Somchai was assigned and resolved it by replacing the filter. Root cause: dirty air filter restricting airflow to the evaporator coil.
+
+Room 412 HVAC unit D-2 reported a COMPRESSOR FAULT alert during the night shift. Technician Anong inspected the unit and found a failed start capacitor. The maintenance job replaced the capacitor and the unit returned to normal operation. Root cause: aged start capacitor exceeding its rated lifespan.
+
+Room 205 lighting controller L-9 raised a CONNECTIVITY alert after losing its network link at 02:10. Facilities Lead Wichai performed a power cycle and re-paired the controller to the gateway, clearing the alert. Root cause: a transient gateway firmware glitch after an automatic update.
