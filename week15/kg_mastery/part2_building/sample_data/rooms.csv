@@ -1,0 +1,9 @@
+room_id,floor,room_type,capacity,rate_thb
+X101,1,Standard,2,1500
+X102,1,Standard,2,1600
+X201,2,Deluxe,2,2500
+X202,2,Deluxe,4,2800
+X301,3,Suite,4,4500
+X302,3,Suite,2,4200
+X401,4,Function Hall,50,12000
+X501,5,Suite,2,5000

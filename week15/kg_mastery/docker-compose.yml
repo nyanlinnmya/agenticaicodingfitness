@@ -1,0 +1,28 @@
+# Neo4j 5.x with APOC + Graph Data Science for the KG Mastery course.
+#   docker compose -f week15/kg_mastery/docker-compose.yml up -d
+# Browser UI: http://localhost:7474   (login: neo4j / mas_memory_2024)
+# Bolt:       bolt://localhost:7687
+# Stop:       docker compose -f week15/kg_mastery/docker-compose.yml down
+services:
+  neo4j:
+    image: neo4j:5.18-community
+    ports:
+      - "7474:7474"   # browser UI / HTTP
+      - "7687:7687"   # bolt driver
+    environment:
+      NEO4J_AUTH: neo4j/mas_memory_2024
+      # APOC = extended procedures; GDS = Graph Data Science (PageRank, Louvain, etc.)
+      NEO4J_PLUGINS: '["apoc","graph-data-science"]'
+      # let APOC import/export + run unrestricted procedures used in the course
+      NEO4J_apoc_import_file_enabled: "true"
+      NEO4J_dbms_security_procedures_unrestricted: "apoc.*,gds.*"
+      # heap/page cache sized for GDS on a laptop (Part 2.8 production checklist)
+      NEO4J_server_memory_heap_max__size: "2G"
+      NEO4J_server_memory_pagecache_size: "1G"
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+
+volumes:
+  neo4j_data:
+  neo4j_logs:

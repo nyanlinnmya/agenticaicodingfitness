@@ -1,0 +1,33 @@
+# --- Core (Parts 1, 2, 5) ---
+neo4j>=5.14.0
+python-dotenv>=1.0.0
+
+# --- LLM + GraphRAG (Part 3) ---
+anthropic>=0.40.0
+langchain>=0.2.0
+langchain-anthropic>=0.2.0
+langchain-community>=0.2.0
+langchain-neo4j>=0.1.0
+langchain-core>=0.2.0
+
+# --- Vector embeddings (Part 2.6 / 2.7) ---
+langchain-openai>=0.1.0
+langchain-text-splitters>=0.2.0
+
+# --- Unstructured extraction (Part 2.2) ---
+langchain-experimental>=0.0.60
+
+# --- Optional frameworks (install as needed; each Part 3 script guards its import) ---
+# langgraph>=0.2.0                 # part3_graphrag/02_langgraph_react_agent.py
+# crewai>=0.55.0                   # part3_graphrag/03_crewai_crew.py
+# crewai-tools>=0.8.0
+# google-adk>=0.1.0                # part3_graphrag/04_google_adk_agent.py
+# fastmcp>=0.2.0                   # part3_graphrag/05_fastmcp_server.py
+# llama-index>=0.11.0             # part3_graphrag/06_llamaindex.py
+# llama-index-graph-stores-neo4j>=0.3.0
+# llama-index-llms-anthropic>=0.3.0
+
+# --- Evaluation (Part 4) ---
+# ragas>=0.2.0                     # part4_evaluation/*
+# datasets>=2.0.0
+# pandas>=2.0.0

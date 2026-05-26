@@ -1,0 +1,16 @@
+# Core — needed for almost every lesson
+anthropic>=0.40.0
+python-dotenv>=1.0.0
+requests>=2.31.0
+
+# Lesson 04 (MCP) — connecting MCP servers via the Claude Agent SDK
+claude-agent-sdk>=0.1.0
+
+# Lesson 07 (agent memory with Neo4j) — durable knowledge-graph memory + GraphRAG
+neo4j>=5.0.0
+langchain-neo4j>=0.1.0
+langchain-anthropic>=0.2.0
+
+# Note: Lessons 05 (RAG) and 06 (multi-agent) use only the core deps above —
+# they implement retrieval and orchestration in plain Python so they always run.
+# The class repo's week9/ shows the CrewAI + LangGraph versions if you want frameworks.

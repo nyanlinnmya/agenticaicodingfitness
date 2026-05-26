@@ -1,0 +1,35 @@
+# Smart Hotel MAS stack — Neo4j (L4) + ChromaDB (L3) + Redis.
+#   docker compose -f week15/smart_hotel_mas/docker-compose.yml up -d
+# Neo4j UI: http://localhost:7474  (neo4j / hotel_mas_2024)
+# ChromaDB: http://localhost:8001  ·  Redis: localhost:6379
+services:
+  neo4j:
+    image: neo4j:5.18-community
+    ports:
+      - "7474:7474"   # Browser UI
+      - "7687:7687"   # Bolt
+    environment:
+      NEO4J_AUTH: neo4j/hotel_mas_2024
+      NEO4J_PLUGINS: '["apoc","graph-data-science"]'
+      NEO4J_server_memory_heap_max__size: "2G"
+    volumes:
+      - neo4j_data:/data
+    healthcheck:
+      test: ["CMD", "neo4j", "status"]
+      interval: 10s
+
+  chromadb:
+    image: chromadb/chroma:latest
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  neo4j_data:
+  chroma_data:

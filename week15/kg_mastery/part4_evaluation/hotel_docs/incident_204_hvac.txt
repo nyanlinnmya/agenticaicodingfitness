@@ -1,0 +1,15 @@
+HVAC Incident Report — Room 204
+
+On 2026-05-18 at 14:30, device AC-204 (Daikin split unit, installed 2023-04-01)
+in Room 204 triggered a HIGH severity temperature alert (ALT-204). The room
+temperature climbed to 29.4C while the setpoint was 23C, indicating the
+compressor was not engaging.
+
+Technician Somchai (Staff S-12, Maintenance shift) was assigned to alert
+ALT-204 and performed MaintenanceJob MJ-66 (type=HVAC). The root cause was a
+clogged condensate drain causing a safety cutout. The job started at 15:10 and
+completed at 16:05; MJ-66 RESOLVES ALT-204.
+
+Energy impact: Room 204 consumed 38% more kWh than its 7-day baseline during the
+fault window because the unit short-cycled. After repair, consumption returned to
+baseline. The supplier of AC-204 is CoolAir Co. (Thailand, category=HVAC).

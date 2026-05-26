@@ -1,0 +1,16 @@
+Energy & HVAC Incident Report — Room 305
+
+On 2026-05-20 at 09:12, the air conditioner AC-305 (Mitsubishi inverter unit) in
+Room 305 raised an HVAC fault alert (ALT-305) of MEDIUM severity. The unit
+reported an inverter board error and fell back to fixed-speed operation, raising
+energy use sharply.
+
+SensorReadings for Room 305 showed humidity holding at 68% and energy draw of
+2.1 kWh/h versus a 1.2 kWh/h baseline. Guest G-301 (checked in 2026-05-19,
+checked out 2026-05-22) reported discomfort to the front desk.
+
+Technician Somchai (Staff S-12) was assigned to ALT-305 and performed
+MaintenanceJob MJ-77 (type=HVAC), replacing the inverter board. MJ-77 RESOLVES
+ALT-305 and is FOR_ROOM 305. The job completed the same day. AC-305 is provided
+by CoolAir Co. (Thailand). Post-repair energy use returned to the 1.2 kWh/h
+baseline, confirming the fix.
