@@ -99,7 +99,7 @@ The **frontmatter `description` is the trigger** — write it as "what it does +
 
 ### Skills → Plugins → Marketplaces
 - **Skill** = one folder with a `SKILL.md`.
-- **Plugin** = a bundle of skills (+ optional commands, agents, MCP servers) with a `plugin.json`. *This bootcamp is one plugin with 8 skills.*
+- **Plugin** = a bundle of skills (+ optional commands, agents, MCP servers) with a `plugin.json`. *This bootcamp is one plugin with 9 skills.*
 - **Marketplace** = a git repo listing plugins, so others can install them:
 
 ```
