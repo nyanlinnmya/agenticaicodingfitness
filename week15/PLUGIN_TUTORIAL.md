@@ -1,6 +1,6 @@
 # 🏋️ Week 15 — How to Recap the Whole Course with the Bootcamp Plugin
 
-A hands-on tutorial for the **Agentic Coding Fitness Bootcamp** Claude Code plugin. If you missed a session — or want to drill the concepts at your own pace — this is your guide. The plugin turns the entire 14-week course into 8 skills you *talk to*, each with explanations, runnable code, and a guided lab.
+A hands-on tutorial for the **Agentic Coding Fitness Bootcamp** Claude Code plugin. If you missed a session — or want to drill the concepts at your own pace — this is your guide. The plugin turns the entire course into 9 skills you *talk to*, each with explanations, runnable code, and a guided lab.
 
 > **You don't read this plugin like a book. You ask Claude questions, and the right lesson loads itself.**
 
@@ -11,7 +11,7 @@ A hands-on tutorial for the **Agentic Coding Fitness Bootcamp** Claude Code plug
 1. [What you get](#1-what-you-get)
 2. [Install it (2 minutes)](#2-install-it-2-minutes)
 3. [How to drive it — the golden rule](#3-how-to-drive-it--the-golden-rule)
-4. [The 8 skills, with example prompts](#4-the-8-skills-with-example-prompts)
+4. [The 9 skills, with example prompts](#4-the-9-skills-with-example-prompts)
 5. [Three ways to recap the course](#5-three-ways-to-recap-the-course)
 6. [A full worked example session](#6-a-full-worked-example-session)
 7. [Learning paths for different people](#7-learning-paths-for-different-people)
@@ -23,7 +23,7 @@ A hands-on tutorial for the **Agentic Coding Fitness Bootcamp** Claude Code plug
 
 ## 1. What you get
 
-The plugin (`agentic-coding-fitness`) installs **8 concept skills**. Each one:
+The plugin (`agentic-coding-fitness`) installs **9 concept skills**. Each one:
 
 - **Teaches** the idea in plain language (no jargon walls),
 - **Shows runnable example code** drawn from this repo's real `weekN/` files,
@@ -38,7 +38,8 @@ The plugin (`agentic-coding-fitness`) installs **8 concept skills**. Each one:
 | 5 | `rag-knowledge-agents` | RAG: grounding answers in your own documents | W8 |
 | 6 | `multi-agent-systems` | Sequential, swarm, router; CrewAI/LangGraph/AutoGen | W9 |
 | 7 | `agent-memory-graphs` | Durable memory with Neo4j; GraphRAG; event sourcing | W14 |
-| 8 | `models-and-patterns` | Choosing models/frameworks; pattern catalog; course map | W11 |
+| 8 | `knowledge-graph-mastery` | Production GraphRAG: Cypher+GDS, ingestion, 7 frameworks, RAGAS evaluation | W15 |
+| 9 | `models-and-patterns` | Choosing models/frameworks; pattern catalog; course map | W11 |
 
 ---
 
@@ -61,7 +62,7 @@ You should see something like:
 
 ```text
 ✓ Installed Agentic Coding Fitness Bootcamp
-Reloaded: ... 8 skills ...
+Reloaded: ... 9 skills ...
 ```
 
 > **Already cloned the repo locally?** You can point at the folder instead:
@@ -108,7 +109,7 @@ Give me the guided lab for tool use — walk me through building it step by step
 
 ---
 
-## 4. The 8 skills, with example prompts
+## 4. The 9 skills, with example prompts
 
 For each skill below: what it teaches, **prompts to copy-paste**, and what you'll get back.
 
@@ -272,7 +273,32 @@ Give me the agent-memory lab — let's run Neo4j in Docker and watch the graph g
 
 ---
 
-### 4.8 `models-and-patterns` — the decision layer & course map (W11)
+### 4.8 `knowledge-graph-mastery` — production GraphRAG & evaluation (W15)
+
+**Teaches:** the deep dive past basic memory — Cypher up through **Graph Data Science** (PageRank/Louvain/Node2Vec), building graphs from CSV/JSON/text, vector embeddings + chunking, GraphRAG across **7 frameworks** (LangChain, LangGraph, CrewAI, Google ADK, FastMCP, LlamaIndex, raw driver), and the step most people skip — **evaluating** GraphRAG with RAGAS, CI/CD gates, and production monitoring.
+
+Try:
+```text
+What's Graph Data Science? Show me PageRank and Louvain on my graph.
+```
+```text
+Compare the GraphRAG frameworks — LangChain vs LangGraph vs CrewAI vs LlamaIndex.
+```
+```text
+How do I actually measure if my GraphRAG is any good? Explain the 4 RAGAS metrics.
+```
+```text
+Set up a CI gate that fails the build when GraphRAG quality regresses.
+```
+```text
+Give me the knowledge-graph-mastery lab — build a graph, query it, then evaluate it.
+```
+
+**You'll get:** the `week15/kg_mastery/` six-part track — the hotel-graph loader, GDS enrichment, `GraphCypherQAChain` + the tool-wrapping safety pattern, the four-layer `AgentMemory`, the four RAGAS metrics with score targets, and a lab that takes a graph all the way from raw data to a *measured* system you can trust.
+
+---
+
+### 4.9 `models-and-patterns` — the decision layer & course map (W11)
 
 **Teaches:** picking a model on 4 axes (capability/cost/latency/context), picking a framework, the full pattern catalog, the one-page course map, and a decision flow for new projects.
 
@@ -302,7 +328,7 @@ Ask each skill for its core idea, one after another:
 ```text
 Give me the ONE core idea of llm-fundamentals in 3 sentences.
 ```
-Repeat for `tool-use`, `agent-loops`, `mcp-and-skills`, `rag-knowledge-agents`, `multi-agent-systems`, `agent-memory-graphs`. Finish with:
+Repeat for `tool-use`, `agent-loops`, `mcp-and-skills`, `rag-knowledge-agents`, `multi-agent-systems`, `agent-memory-graphs`, `knowledge-graph-mastery`. Finish with:
 ```text
 Now tie all of those together with the models-and-patterns course map.
 ```
@@ -439,7 +465,7 @@ The skills encode the *course's* framing, the real example files, and structured
 
 **I only have 10 minutes. What do I do?**
 ```text
-Give me the ONE core idea of each of the 8 skills, one sentence each, then the course map.
+Give me the ONE core idea of each of the 9 skills, one sentence each, then the course map.
 ```
 
 ---
