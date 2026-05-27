@@ -139,13 +139,18 @@ def build_crew():
         from crewai import Agent, Crew, Process, Task
     except ImportError:
         print("Part 2 needs crewai. Install it with:")
-        print("    pip install crewai")
+        print("    pip install 'crewai[anthropic]'   # the [anthropic] extra adds the native provider for the anthropic/<model> LLM string")
         sys.exit(1)
     try:
-        from crewai_tools import BaseTool
+        # crewai >=1.0 moved BaseTool to crewai.tools; releases <1.0 exposed it
+        # from crewai_tools. Try the modern path first, fall back for old installs.
+        try:
+            from crewai.tools import BaseTool
+        except ImportError:
+            from crewai_tools import BaseTool
     except ImportError:
-        print("Part 2 needs crewai-tools. Install it with:")
-        print("    pip install crewai-tools")
+        print("Part 2 needs crewai tools (BaseTool). Install/upgrade crewai:")
+        print("    pip install -U 'crewai[anthropic]' crewai-tools")
         sys.exit(1)
 
     import random
