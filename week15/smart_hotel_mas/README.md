@@ -74,9 +74,10 @@ Work through `checkpoints/` 1 → 6. Each is self-contained and prints what it d
 - **CP1** needs Neo4j. **CP2** is pure stdlib (dict + SQLite) — runs with no services.
 - **CP3** needs ChromaDB + `chromadb` + `sentence-transformers`.
 - **CP4** needs `pulp` + `prophet`. **CP5** needs `gymnasium` + `stable-baselines3` + `scikit-learn`.
-- **CP6** needs Neo4j + `crewai` + `ANTHROPIC_API_KEY` and ties all 4 layers together.
+- **CP6** needs Neo4j + `crewai[anthropic]` + `ANTHROPIC_API_KEY` and ties all 4 layers together. **crewai supports Python <3.14** — on 3.14 use a 3.13 venv just for CP6 (`python3.13 -m venv .venv313`).
 
 ## Notes
 - Neo4j password is **`hotel_mas_2024`** (per the workshop). Override any setting via env (`NEO4J_PASSWORD`, `CHROMA_HOST`, …) — see `config.py`.
 - Model: `claude-sonnet-4-6` (the PDF predates it and shows `claude-3-5-sonnet`; swap freely).
 - Scripts guard optional imports / missing keys with a clear `pip install …` message instead of a traceback.
+- **CP6 / crewai 1.x:** `BaseTool` now lives at `crewai.tools` (was `crewai_tools` in <1.0) and the `anthropic/<model>` LLM string needs the `crewai[anthropic]` extra — both handled by `checkpoint6_full_mas.py` and `requirements.txt`.
