@@ -134,6 +134,8 @@ print(chain.invoke({"query": "Which devices triggered HIGH alerts?"})["result"])
 
 A GraphRAG demo that "looks right" is not a system you can ship. Part 4 measures quality with **RAGAS** (LLM-as-judge) and keeps it from regressing.
 
+> The general, **non-graph** version of this discipline lives in the `agent-evaluation` skill — golden datasets, LLM-as-judge bias (positional/verbosity/self-preference) and its calibration, the 5-gate CI/CD pipeline (lint → eval → cost → canary → shadow), and the DeepEval/Braintrust/Inspect-AI framework choices. Read it for the *why*; this Part 4 is the *graph-specific how*, with runnable scripts against the hotel graph.
+
 **The four RAGAS metrics:**
 
 | Metric | Catches | Good score |
@@ -148,8 +150,10 @@ The workflow:
 1. **Generate a test set** from your docs → a gold CSV. (`02_testset_generation.py`)
 2. **Score** worked examples on the 4 metrics. (`01_ragas_eval.py`)
 3. **Gate CI/CD** — fail the build if any metric drops below its floor (looser floors: 0.85 / 0.80 / 0.75 / 0.70), with a GitHub Actions YAML included. (`03_cicd_gate.py`)
-4. **Track iterations** — log scores + the action taken each round; diagnose with the failure-mode taxonomy. (`05_improvement_loop.py`, `FAILURE_MODES.md`)
-5. **Monitor production** — a `@monitored_graph_query` decorator that records latency, success rate, and empty-result rate. (`04_production_monitoring.py`)
+4. **Track iterations** — the *close-the-loop* artifact: an append-only `IterationLog` (JSON) records each round's four scores + the one action you took, then prints the trend with ↑/↓ arrows so improvement (or regression) is obvious at a glance. Diagnose the lowest metric with the failure-mode taxonomy. (`05_improvement_loop.py`, `FAILURE_MODES.md`)
+5. **Monitor production** — RAGAS tells you the system was good at *build* time; monitoring tells you it's still good *right now*. A `@monitored_graph_query` decorator times every query and records success / error / empty, and `get_metrics_summary()` reduces that into success rate, empty-result rate, and p99 latency you can alert on. (`04_production_monitoring.py`)
+
+Together, `05_improvement_loop.py` (offline trend) and `04_production_monitoring.py` (live signal) close the loop: you measure, diagnose, change one thing, re-measure, and watch live traffic so regressions surface before users do.
 
 > 📁 `week15/kg_mastery/part4_evaluation/` — note its README: RAGAS's test-set API shifts between versions, so the scripts print your installed version if imports differ. Every script guards a missing key/package with a clear message instead of a traceback.
 
@@ -192,7 +196,65 @@ python week15/kg_mastery/part1_fundamentals/00_load_hotel_dataset.py
 
 ## 🧪 Guided lab (offer this)
 
-Take a graph from raw data all the way to a *measured* GraphRAG system:
+Take a graph from raw data all the way to a *measured* GraphRAG system — and prove the quality gate actually blocks bad changes.
+
+### Warm-up (5-10 min, binary pass/fail)
+
+Run the CI/CD gate's *shape* with **no API key and no Neo4j** by porting the threshold logic out of `03_cicd_gate.py` into a $0 stub. **Pass = it prints `PASSED` on the good run and `FAILED` (exit 1) on the bad run.**
+
+```python
+# graphrag_gate_warmup.py  — $0, no key, no DB. Pure gate logic from 03_cicd_gate.py.
+THRESHOLDS = {"faithfulness": 0.85, "answer_relevancy": 0.80,
+              "context_precision": 0.75, "context_recall": 0.70}
+
+def gate(scores: dict) -> bool:                 # the heart of 03_cicd_gate.py
+    return all(scores[m] >= THRESHOLDS[m] for m in THRESHOLDS)
+
+good = {"faithfulness": 0.91, "answer_relevancy": 0.88,
+        "context_precision": 0.79, "context_recall": 0.82}   # iter 3 of the improvement log
+bad  = {**good, "faithfulness": 0.61}                          # regression -> must fail
+
+assert gate(good) is True,  "good scores should PASS"
+assert gate(bad)  is False, "a faithfulness regression must FAIL the build"
+if __name__ == "__main__":                      # guard: importing `gate` must not exit
+    print("PASSED" if gate(good) else "FAILED")
+    import sys; sys.exit(0 if gate(good) else 1)
+```
+
+Binary check: both asserts pass, the good run prints `PASSED`, and swapping `gate(good)`→`gate(bad)` makes it exit non-zero. That non-zero exit is exactly what fails a PR check.
+
+### Skill Drill (15-30 min, runnable, $0 with a MockLLM stub)
+
+Wire a fake GraphRAG pipeline into the **real** gate (`03_cicd_gate.py` already ships a `dummy_rag_function` and an inline test set, so it runs end-to-end without a live pipeline). Swap in a `MockLLM` so it needs **no `ANTHROPIC_API_KEY`**:
+
+```python
+# Drill against 03_cicd_gate.py's contract:  rag_fn(question) -> {"answer", "contexts"}
+class MockLLM:
+    """$0 stand-in: 'faithful' answers only repeat sentences from the context."""
+    def __init__(self, faithful=True): self.faithful = faithful
+    def answer(self, question, contexts):
+        if self.faithful:
+            return contexts[0]                       # grounded -> high faithfulness
+        return "Room 999 exploded and the manager fled to Mars."  # ungrounded -> low
+
+CTX = ["Room 305 air conditioner AC-305 triggered an HVAC fault alert on 2026-05-20."]
+
+def make_rag_fn(faithful):
+    llm = MockLLM(faithful=faithful)
+    return lambda q: {"answer": llm.answer(q, CTX), "contexts": CTX}
+
+def score(rag_fn):                                   # toy proxy for RAGAS faithfulness
+    out = rag_fn("What happened to room 305?")
+    grounded = out["answer"] in out["contexts"]      # claim must appear in retrieved ctx
+    return {"faithfulness": 0.95 if grounded else 0.40,
+            "answer_relevancy": 0.88, "context_precision": 0.80, "context_recall": 0.78}
+
+from graphrag_gate_warmup import gate
+print("faithful  ->", "PASS" if gate(score(make_rag_fn(True)))  else "FAIL")  # PASS
+print("unfaithful->", "PASS" if gate(score(make_rag_fn(False))) else "FAIL")  # FAIL
+```
+
+Then, with a key/DB available, run the real thing in order — each step builds on the last:
 
 1. **Build.** Start Neo4j, load the hotel dataset, open the Browser UI and watch the graph appear. Run `01_cypher_basics.py` and write two of your own `MATCH` queries.
 2. **Enrich.** Run `04_gds_enrichment.py`; in the Browser, color nodes by `community_id` and size by `importance_score`. *See* the structure the algorithms found.
@@ -200,6 +262,18 @@ Take a graph from raw data all the way to a *measured* GraphRAG system:
 4. **Upgrade to a tool-using agent.** Run `part5_use_cases/01_hotel_iot_agent.py`; note the Cypher is hidden inside each `@tool`. Have them add a fourth tool.
 5. **Now prove it works.** Run `01_ragas_eval.py` on two Q&A pairs, read the four scores, then deliberately break the retrieval and watch `faithfulness`/`context_recall` drop. This is the moment evaluation clicks.
 6. **Gate it.** Wire `03_cicd_gate.py` into a GitHub Action so a regression fails the build.
-7. **Stretch:** pick a second framework from Part 3 (LangGraph or CrewAI) and re-implement step 3, then compare with `part6_reference/framework_comparison.md`.
+7. **Close the loop.** Run `05_improvement_loop.py` to see the iteration trend, then `04_production_monitoring.py` to watch success/empty/p99 on live queries — offline trend + live signal together.
+
+### Evaluation criteria (weighted)
+
+| Criterion | Weight | Pass when… |
+|---|---|---|
+| Warm-up gate is correct | 25% | good scores `PASSED`, a faithfulness regression exits non-zero |
+| MockLLM drill runs at $0 | 20% | faithful→PASS, unfaithful→FAIL with no API key/DB |
+| Real gate wired | 20% | `03_cicd_gate.py` runs end-to-end (real or `dummy_rag_function`) |
+| Names the failed metric | 20% | when it FAILs, they say *which* metric tripped and a likely fix (failure-mode taxonomy) |
+| Closes the loop | 15% | runs `05_improvement_loop.py` + `04_production_monitoring.py` and reads the trend/alert numbers |
+
+**Pass threshold: 4 / 5 criteria (≥ 80% by weight).** Cross-link: the general, non-graph version of this drill is in `agent-evaluation`; the framework-choice and decision context is in `models-and-patterns`.
 
 End by tying it back: "Week 14 gave an agent a memory; Week 15 makes that memory a graph you can build at scale, query with algorithms, reason over with any framework — and *measure*, so you actually trust it in production."

@@ -5,18 +5,18 @@
     "name": "Agentic Coding Fitness @ Rust Tech Bar",
     "email": "kwarodom@altotech.ai"
   },
-  "description": "Learn-by-doing skills that recap the Agentic Coding Fitness course: LLM APIs, tool use, agent loops, MCP, RAG, multi-agent systems, knowledge-graph memory, and production GraphRAG with evaluation.",
-  "version": "1.1.0",
+  "description": "Learn-by-doing skills for building production agentic AI: the fundamentals (LLM APIs, tool use, agent loops, MCP, RAG, multi-agent systems, knowledge-graph memory, production GraphRAG with evaluation) plus the 12-pattern taxonomy, production & observability, agent evaluation/CI gating, a drill library, the 16-week curriculum, vibe-coding & security, A2A, and skill-authoring.",
+  "version": "2.0.0",
   "plugins": [
     {
       "name": "agentic-coding-fitness",
       "displayName": "Agentic Coding Fitness Bootcamp",
       "source": "./plugins/agentic-coding-fitness",
-      "description": "9 concept skills that teach, demo, and run guided labs for everything taught in class: talking to LLMs, tool use, the agent loop, MCP & skills, RAG, multi-agent patterns, agent memory with Neo4j, production GraphRAG with evaluation (RAGAS), and choosing models/frameworks.",
-      "version": "1.1.0",
+      "description": "16 concept-and-practice skills that teach, demo, and run guided labs for everything in the course and the strategy blueprint: talking to LLMs, tool use, the agent loop, MCP & skills, RAG, multi-agent patterns, agent memory with Neo4j, production GraphRAG with RAGAS evaluation, choosing models/patterns (12-pattern taxonomy), production & observability (HITL, LangSmith, cost), agent evaluation with CI gates, a drill library, the 16-week curriculum, vibe-coding & security, the A2A protocol, and authoring your own skills.",
+      "version": "2.0.0",
       "author": { "name": "Agentic Coding Fitness" },
       "license": "MIT",
-      "keywords": ["ai-agents", "multi-agent", "llm", "rag", "graphrag", "ragas", "knowledge-graph", "neo4j", "mcp", "education", "anthropic", "claude"],
+      "keywords": ["ai-agents", "multi-agent", "llm", "rag", "graphrag", "ragas", "knowledge-graph", "neo4j", "mcp", "a2a", "agent-patterns", "evaluation", "cicd", "observability", "production", "hitl", "vibe-coding", "curriculum", "drills", "skill-authoring", "education", "anthropic", "claude"],
       "category": "education"
     }
   ]
