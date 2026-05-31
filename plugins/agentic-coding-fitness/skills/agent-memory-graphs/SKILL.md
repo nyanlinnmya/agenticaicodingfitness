@@ -36,6 +36,8 @@ The core pattern: **don't overwrite state — append events.** Each decision/obs
 (Agent {id})-[:PERFORMED]->(Event {type, data, ts})-[:INVOLVES]->(Room {name})
 ```
 
+> 🧠 **One-line memory taxonomy:** these timestamped `Event` nodes are **episodic** memory ("*what happened, when*"). The stable entity nodes and relationships they point to (Room → HAS → Sensor) are **semantic** memory ("*facts about the world*"). Rules an agent learns to follow ("*if overrides > 3, raise a work order*") are **procedural** memory. One graph can hold all three. The deep version — embedding semantic memory, decay, and retrieval strategies — lives in the `knowledge-graph-mastery` skill (Week 15).
+
 ---
 
 ## The reusable `AgentMemory` class
@@ -145,6 +147,8 @@ print(chain.invoke({"query": "What faults were detected in Room 301?"})["result"
 
 Under the hood: NL question → LLM writes Cypher → Neo4j runs it → LLM turns rows into a sentence. This is RAG (Week 8) but retrieving over a **graph** instead of a pile of text.
 
+> ⚠️ **`allow_dangerous_requests=True` is not free.** It is mandatory here because the LLM *writes the Cypher that actually runs against your DB* — but that means a clever (or confused) question can produce a `DELETE`/`DETACH DELETE`/`MERGE` that mutates your graph. In production: **sandbox it** — connect with a **read-only Neo4j role** (so model-written queries physically cannot write), put it on a throwaway/replica DB, and add a guardrail that rejects write keywords before executing. Never point free-form GraphRAG at a production graph with write credentials. The `knowledge-graph-mastery` skill shows the safer **tool-wrapping** pattern (you write the Cypher, the LLM only fills parameters).
+
 ---
 
 ## Shared graph = multi-agent coordination
@@ -169,14 +173,81 @@ pip install neo4j langchain-neo4j langchain-anthropic
 
 ## 🧪 Guided lab (offer this)
 
-Give an agent a memory it keeps:
+Give an agent a memory it keeps. **No Neo4j and no API key required** — the warm-up runs on an in-memory dict so it costs **$0**; the skill drill graduates to real Neo4j if it's running.
 
-1. **Start Neo4j** with the Docker command above; open the browser UI so they can *see* nodes appear.
-2. **Store events.** Use `AgentMemory` to record 3–4 events (a fault, a work order, a resolution) with linked entities. Refresh the Neo4j browser and watch the graph grow visually — this is the moment it clicks.
-3. **Recall.** Call `recall_recent()` and a "recall everything involving Room 301" query. Confirm the facts persisted.
-4. **Restart the script.** Run a *fresh* process and recall again — the memory survived. Contrast with the Week-2 `messages` list that would have been empty.
-5. **GraphRAG.** Wire up `build_graphrag_chain` and ask "what happened in Room 301?" in plain English. Have them peek at the Cypher it generated.
-6. **Two agents, one graph.** Spin up a second `AgentMemory("sensor-01")` writing alerts; show the first agent can query events the second one wrote. That's coordination via shared memory.
-7. **Stretch:** point them at `week14/lab1_hotel_mas.py` and the `multi-agent-systems` skill — combine a swarm with graph memory.
+### Warm-up (5–10 min · binary pass/fail · $0)
+Prove you understand "durable memory survives a restart" without any infrastructure. Build a 20-line in-memory `AgentMemory` that mirrors the real one's API, plus a `MockLLM` so "GraphRAG" runs offline.
+
+```python
+import json
+from datetime import datetime
+
+class MemoryStore:
+    """In-memory stand-in for the Neo4j AgentMemory — same store/recall API, $0."""
+    def __init__(self, agent_id, db=None):
+        self.agent_id = agent_id
+        self.db = db if db is not None else {}          # pass a SHARED dict for multi-agent
+        self.db.setdefault("events", [])
+
+    def store_event(self, event_type, data, entities=None):
+        eid = f"{self.agent_id}:{datetime.now().isoformat()}"
+        self.db["events"].append({"id": eid, "agent": self.agent_id, "type": event_type,
+                                  "data": data, "entities": entities or [], "ts": eid})
+        return eid
+
+    def recall_recent(self, event_type=None, limit=5):
+        ev = [e for e in self.db["events"] if e["agent"] == self.agent_id]
+        if event_type: ev = [e for e in ev if e["type"] == event_type]
+        return list(reversed(ev))[:limit]
+
+    def recall_related(self, label, name):              # "everything involving Room 301"
+        return [e for e in self.db["events"] if (label, name) in e["entities"]]
+
+class MockLLM:
+    """Fake GraphRAG: turns recalled rows into a sentence — no API key."""
+    def answer(self, question, rows):
+        kinds = ", ".join(sorted({r["type"] for r in rows})) or "nothing"
+        return f"Q: {question}\nA: I found {len(rows)} event(s): {kinds}."
+
+# --- the warm-up assertions (all must pass) ---
+shared = {}                                              # the "graph" both agents share
+hvac = MemoryStore("hvac-01", shared)
+hvac.store_event("FAULT_DETECTED", {"sev": "high"}, entities=[("Room", "301")])
+hvac.store_event("FAULT_RESOLVED", {"fix": "capacitor"}, entities=[("Room", "301")])
+assert len(hvac.recall_recent()) == 2                    # (1) stored + recalled
+
+reloaded = MemoryStore("hvac-01", shared)                # NEW object = "restart"
+assert len(reloaded.recall_recent()) == 2                # (2) memory SURVIVED the restart
+
+sensor = MemoryStore("sensor-01", shared)                # second agent, same dict
+sensor.store_event("TEMP_ALERT", {"c": 31}, entities=[("Room", "301")])
+assert len(hvac.recall_related("Room", "301")) == 3      # (3) hvac sees the sensor's write
+
+print(MockLLM().answer("What happened in Room 301?", hvac.recall_related("Room", "301")))
+```
+
+**Pass = all 3 asserts pass and the MockLLM prints a sentence.** If they pass, the learner has *felt* the three load-bearing ideas — persistence across "restart", recall-by-entity, and one shared store = coordination — before touching a database.
+
+### Skill Drill (15–30 min · runnable · graduates to real Neo4j)
+Swap the dict for the real graph and watch the same API light up nodes you can *see*.
+
+1. **Start Neo4j** (Docker command above) and open the browser UI at `http://localhost:7474`.
+2. **Run the real class.** Import `AgentMemory` from `week14/agent_memory.py`; replay the same `store_event` calls. Refresh the browser — watch nodes/edges appear. *This is the moment it clicks.*
+3. **Recall + restart.** Call `recall_recent()`, then kill the script and run a *fresh* process and recall again — the facts survived (contrast with the Week-2 `messages` list, which would be empty).
+4. **GraphRAG, then make it safe.** Build the chain (`build_graphrag_chain`) and ask "what happened in Room 301?" in English; peek at the generated Cypher. Then prove the caveat above: create a **read-only Neo4j role**, reconnect, and confirm a model-written `DELETE` is *refused* by the DB.
+5. **Two agents, one graph.** Spin up `AgentMemory("sensor-01")` writing alerts; show `hvac-01` can query what the sensor wrote — coordination via shared memory, no direct messaging.
+
+**Weighted evaluation criteria (5):**
+| # | Criterion | Weight |
+|---|---|---|
+| 1 | All 3 warm-up asserts pass on the $0 in-memory store | 1 |
+| 2 | Real `AgentMemory` stores events you can *see* in the Neo4j browser | 1 |
+| 3 | Memory survives a process restart (recall returns data in a fresh run) | 1 |
+| 4 | GraphRAG answers in English **and** the read-only role refuses a model-written write | 1 |
+| 5 | A second agent reads events the first agent wrote (shared-graph coordination) | 1 |
+
+**Pass threshold: 4 / 5 criteria.** (Criterion 1 alone is the $0 floor — no learner should leave without it.)
+
+**Stretch:** point them at `week14/lab1_hotel_mas.py` (a 2-agent hotel crew on shared memory) and the `multi-agent-systems` skill to combine a swarm with graph memory; then the `agent-evaluation` skill to *measure* whether the GraphRAG answers are actually correct (recall vs. hallucination), and `knowledge-graph-mastery` for the production GraphRAG + RAGAS version.
 
 End by tying the whole course together: "Week 2 gave the model a sentence of memory; Week 14 gives a team of agents a memory that outlives them."

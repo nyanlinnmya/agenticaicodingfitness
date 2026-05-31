@@ -105,7 +105,9 @@ print(chat("What's my name?"))   # it knows — because "Aom" is still in `messa
 
 If you forget to append the assistant's reply back into `messages`, the model gets amnesia on the next turn. Try it and watch it break — that's the lesson.
 
-> 📁 Class repo: `week2/claudemulti_turn.py` and the interactive loop in `week7/agent.py`
+> 📁 Class repo: `week2/claudemulti_turn.py` (note its `system="...mentor..."` prompt — the *same text* on every turn) and the interactive loop in `week7/agent.py`
+
+> 💸 **Cost lever you'll want soon: prompt caching.** Notice that resending the whole history means you re-send (and re-pay for) the *same* opening tokens every turn — your `system` prompt, tool definitions, retrieved docs. Anthropic lets you mark that stable prefix as cached, and a *cache hit* costs roughly **90% less** than re-processing it. You don't need it on day one, but it's the single biggest cheap win once your conversations or contexts get long. The full cost economics (caching + model routing + context compaction) live in the `models-and-patterns` skill.
 
 ---
 
@@ -123,12 +125,80 @@ Every agent in this course is this loop with extras bolted on: **tools** (next s
 
 ## 🧪 Guided lab (offer this)
 
-When the learner is ready, walk them through building a tiny terminal chatbot **from a blank file**, one step at a time. Don't paste the whole thing — make them type each piece and run it:
+Two stages: a quick **Warm-up** to prove the wiring works, then a **Skill Drill** that builds the memory loop. The drill uses a tiny **MockLLM stub** so it runs at **$0, no API key** — swap in the real client at the end.
 
-1. **Step 1 — one call.** Have them write just the single-call example and run it. Confirm they see text + a token count.
-2. **Step 2 — make it a loop.** Wrap it in `while True:` with `input("You: ")`, and a `quit` exit. At this point it answers but has *no memory* — point that out.
-3. **Step 3 — add memory.** Introduce the `messages` list, append the user turn before the call and the assistant turn after. Now ask it "what's my name?" two turns later to prove memory works.
-4. **Step 4 — break it on purpose.** Tell them to comment out the line that appends the assistant reply. Run again, watch it forget. Restore it. *This* is the moment the concept clicks.
-5. **Step 5 — stretch.** Switch `create()` to `stream()` so replies type out live.
+### Warm-up (5–10 min) — *make one call and read `usage`*
 
-Keep each step to a few lines, run after every step, and explain what changed. End by connecting it forward: "this `messages` loop is the skeleton of every agent — next we give it tools."
+Have them write the single-call example from §1 and run it against the real API (or the mock below).
+
+**Pass / fail (binary):** the script prints a non-empty reply **and** a token line like `Tokens: 14 in, 37 out` pulled from `response.usage`. If they can't point to where the input/output token counts came from, they haven't passed — that's the whole point of the warm-up.
+
+### Skill Drill (15–30 min) — *a multi-turn memory loop that runs at $0*
+
+Goal: build the `messages` loop **from a blank file** and prove memory works — without spending a cent. Drop in this stub so there's no API key and no cost; it "remembers" only because the loop resends the whole list:
+
+```python
+# mock_llm.py — a fake client so the drill runs at $0, no key needed
+class MockUsage:
+    def __init__(self, n_in, n_out): self.input_tokens, self.output_tokens = n_in, n_out
+
+class MockBlock:
+    def __init__(self, text): self.text = text
+
+class MockResponse:
+    def __init__(self, text, messages):
+        self.content = [MockBlock(text)]
+        n_in = sum(len(m["content"].split()) for m in messages)
+        self.usage = MockUsage(n_in, len(text.split()))
+
+class MockMessages:
+    def create(self, *, model, max_tokens, messages, system=None):
+        # Fake "memory": echo back any name the history ever mentioned.
+        name = next((m["content"].split("name is ")[1].split(".")[0]
+                     for m in messages if "name is " in m["content"]), None)
+        last = messages[-1]["content"]
+        reply = (f"Your name is {name}." if "my name" in last.lower() and name
+                 else f"(mock) You said: {last}")
+        return MockResponse(reply, messages)
+
+class MockLLM:
+    def __init__(self): self.messages = MockMessages()
+
+client = MockLLM()   # later: import anthropic; client = anthropic.Anthropic()
+```
+
+```python
+# drill.py
+from mock_llm import client
+
+messages = []  # <-- THIS list is the memory
+
+def chat(text):
+    messages.append({"role": "user", "content": text})
+    resp = client.messages.create(
+        model="claude-haiku-4-5", max_tokens=1000, messages=messages,
+    )
+    reply = resp.content[0].text
+    messages.append({"role": "assistant", "content": reply})  # remember the reply
+    print(f"  [{resp.usage.input_tokens} in / {resp.usage.output_tokens} out]")
+    return reply
+
+print(chat("My name is Aom."))
+print(chat("What's my name?"))   # must answer "Aom" — proof memory works
+```
+
+Run order to walk them through: (1) run it, confirm turn 2 answers "Aom"; (2) **break it on purpose** — comment out the line that appends the assistant reply, re-run, watch the input-token count and behaviour change; restore it; (3) note that the input-token count *grows every turn* — that's the cost the prompt-caching callout above is about; (4) **stretch:** delete `from mock_llm import client`, set `import anthropic; client = anthropic.Anthropic()`, and run the *same loop* against the real model — it should still know the name.
+
+**Weighted evaluation criteria**
+
+| # | Criterion | Weight |
+|---|---|---|
+| 1 | `messages` is the only state; the user turn is appended **before** the call | 1 |
+| 2 | The assistant reply is appended **back** into `messages` after the call | 1 |
+| 3 | Turn 2 ("what's my name?") correctly recalls "Aom" | 1 |
+| 4 | They can explain *why* commenting out the append breaks memory (statelessness) | 1 |
+| 5 | They read `usage` and notice input tokens grow each turn (the caching motivation) | 1 |
+
+**Pass threshold: 4 / 5 criteria.** Criteria 2 and 4 are the heart of it — a pass that misses *both* doesn't count.
+
+End by connecting it forward: "this `messages` loop is the skeleton of every agent — next we give it tools (`tool-use`), then a goal-driven loop (`agent-loops`)."
