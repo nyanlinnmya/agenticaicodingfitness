@@ -1,0 +1,26 @@
+# Week 17 — Long-Running Agents & Fleet Orchestration (Google ADK + A2A)
+#
+# The six checkpoints are OFFLINE construction + simulation demos: they run with
+# NO API key and NO network. Only CP3 needs a third-party package (FastAPI) to
+# run; everything else is Python stdlib. The ADK / A2A packages are OPTIONAL —
+# install them to see the real Agent wiring light up instead of the simulation.
+
+# ── Required only by CP3 (webhook resume) ───────────────────────────────────
+fastapi>=0.110
+pydantic>=2.6
+uvicorn[standard]>=0.27      # only if you serve the webhook for real
+httpx>=0.27                  # FastAPI TestClient dependency
+
+# ── Optional: see the REAL ADK agent wiring (CP1, CP2, CP4) ─────────────────
+# Needs Google credentials (GOOGLE_API_KEY or Vertex AI ADC) for a LIVE run;
+# the checkpoints only CONSTRUCT agents, so the key is not required here.
+# google-adk>=0.3.0
+
+# ── Optional: stand up a REAL A2A server/client (CP5) ───────────────────────
+# a2a-sdk>=0.2.0             # official Python SDK
+# python_a2a                 # alternative shown in the A2A skill
+
+# ── Production persistence (CP2 maps to this; SQLite used offline) ──────────
+# sqlalchemy>=2.0
+# aiosqlite>=0.19            # for the async "sqlite+aiosqlite:///" URL
+# cloud-sql-python-connector # swap SQLite → Cloud SQL in production
