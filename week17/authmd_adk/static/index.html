@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>auth.md × ADK — long-running agent visualizer</title>
+<style>
+  :root {
+    --bg:#0e1117; --panel:#161b22; --panel2:#1c2330; --line:#2b3440;
+    --txt:#e6edf3; --dim:#8b949e; --accent:#58a6ff; --green:#3fb950;
+    --amber:#d29922; --red:#f85149; --violet:#bc8cff;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+         background:var(--bg); color:var(--txt); }
+  header { display:flex; align-items:center; gap:14px; padding:14px 22px;
+           border-bottom:1px solid var(--line); background:var(--panel); flex-wrap:wrap; }
+  header h1 { font-size:16px; margin:0; font-weight:650; }
+  header .sub { color:var(--dim); font-size:12px; }
+  .pill { font-size:11px; padding:3px 9px; border-radius:999px; border:1px solid var(--line);
+          color:var(--dim); display:inline-flex; align-items:center; gap:6px; }
+  .pill .dot { width:8px; height:8px; border-radius:50%; background:var(--dim); }
+  .pill.up .dot { background:var(--green); } .pill.down .dot { background:var(--red); }
+  .wrap { display:grid; grid-template-columns: 1fr 360px; gap:18px; padding:18px 22px; max-width:1280px; margin:0 auto; }
+  @media (max-width:980px){ .wrap{ grid-template-columns:1fr; } }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px 18px; }
+  .panel h2 { font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim);
+              margin:0 0 14px; font-weight:600; }
+  /* state machine */
+  .flow { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .node { position:relative; flex:1; min-width:96px; text-align:center; padding:14px 8px;
+          border:1.5px solid var(--line); border-radius:10px; background:var(--panel2);
+          transition:all .35s ease; }
+  .node .lbl { font-weight:650; font-size:13px; }
+  .node .meta { font-size:10.5px; color:var(--dim); margin-top:3px; }
+  .node.done { border-color:var(--green); color:var(--green); }
+  .node.done .meta { color:var(--green); opacity:.8; }
+  .node.active { border-color:var(--accent); box-shadow:0 0 0 3px rgba(88,166,255,.18);
+                 background:rgba(88,166,255,.08); }
+  .node.paused { border-color:var(--amber); box-shadow:0 0 0 3px rgba(210,153,34,.18);
+                 background:rgba(210,153,34,.08); animation:pulse 1.6s infinite; }
+  @keyframes pulse { 0%,100%{ box-shadow:0 0 0 3px rgba(210,153,34,.10);} 50%{ box-shadow:0 0 0 6px rgba(210,153,34,.28);} }
+  .arrow { color:var(--dim); font-size:18px; flex:0 0 auto; }
+  .badge { display:inline-block; margin-top:8px; font-size:11px; padding:2px 8px; border-radius:6px; }
+  .badge.pause { background:rgba(210,153,34,.18); color:var(--amber); }
+  .badge.done { background:rgba(63,185,80,.18); color:var(--green); }
+  /* readouts */
+  .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:16px; }
+  .stat { background:var(--panel2); border:1px solid var(--line); border-radius:9px; padding:10px 12px; }
+  .stat .k { font-size:10.5px; color:var(--dim); text-transform:uppercase; letter-spacing:.05em; }
+  .stat .v { font-size:18px; font-weight:650; margin-top:2px; }
+  .stat .v.sm { font-size:14px; }
+  /* grants */
+  .grant { border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:12px; background:var(--panel2); }
+  .grant .top { display:flex; justify-content:space-between; align-items:center; }
+  .grant .name { font-weight:650; }
+  .grant .flow { font-size:11px; color:var(--violet); }
+  .grant .scopes { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:11.5px; color:var(--dim); margin-top:6px; }
+  .grant .status { font-size:12px; margin-top:8px; display:flex; align-items:center; gap:6px; }
+  .stoken { color:var(--green); } .slocked { color:var(--dim); } .swait { color:var(--amber); }
+  /* otp */
+  .otp { border:1px dashed var(--amber); border-radius:10px; padding:12px 14px; margin-top:6px; background:rgba(210,153,34,.06); display:none; }
+  .otp.show { display:block; }
+  .otp .code { font-family:ui-monospace,monospace; font-size:26px; font-weight:700; letter-spacing:.18em; color:var(--amber); }
+  /* controls */
+  .btns { display:flex; flex-direction:column; gap:9px; }
+  button { font:inherit; font-weight:600; padding:10px 14px; border-radius:9px; cursor:pointer;
+           border:1px solid var(--line); background:var(--panel2); color:var(--txt); text-align:left;
+           transition:all .15s; }
+  button .hint { display:block; font-weight:400; font-size:11px; color:var(--dim); margin-top:2px; }
+  button:hover:not(:disabled) { border-color:var(--accent); }
+  button:disabled { opacity:.4; cursor:not-allowed; }
+  button.primary { background:rgba(88,166,255,.14); border-color:var(--accent); }
+  button.go { background:rgba(63,185,80,.14); border-color:var(--green); }
+  button.warn { background:rgba(248,81,73,.10); border-color:var(--red); }
+  /* timeline */
+  .log { max-height:340px; overflow:auto; font-size:12.5px; }
+  .ev { display:flex; gap:9px; padding:7px 0; border-bottom:1px solid var(--line); }
+  .ev:last-child { border-bottom:0; }
+  .ev .t { color:var(--dim); flex:0 0 56px; font-family:ui-monospace,monospace; font-size:11px; }
+  .ev .ico { flex:0 0 18px; }
+  .ev.agent .msg { color:var(--accent); } .ev.auth .msg { color:var(--green); }
+  .ev.warn .msg { color:var(--red); } .ev.sys .msg { color:var(--dim); }
+  .ev .msg { white-space:pre-wrap; }
+  .status-line { font-size:12px; color:var(--dim); margin-top:10px; min-height:18px; }
+  .spin { display:inline-block; width:12px; height:12px; border:2px solid var(--line);
+          border-top-color:var(--accent); border-radius:50%; animation:rot .7s linear infinite; vertical-align:-2px; }
+  @keyframes rot { to { transform:rotate(360deg); } }
+  code { background:var(--panel2); padding:1px 5px; border-radius:4px; font-size:12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🔐 auth.md × ADK</h1>
+  <span class="sub">long-running energy work-order agent — pause · resume · re-mint</span>
+  <span style="flex:1"></span>
+  <span class="pill" id="pill-agent"><span class="dot"></span>agent :8089</span>
+  <span class="pill" id="pill-app"><span class="dot"></span>app :8088</span>
+</header>
+
+<div class="wrap">
+  <!-- LEFT: state machine + readouts + timeline -->
+  <div>
+    <div class="panel">
+      <h2>Work-order state machine</h2>
+      <div class="flow" id="flow"></div>
+      <div class="stats" id="stats"></div>
+    </div>
+
+    <div class="panel" style="margin-top:18px">
+      <h2>Lifecycle timeline <span style="color:var(--dim);text-transform:none;letter-spacing:0;font-weight:400">— agent replies (blue) · auth events from the app (green)</span></h2>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: controls + grants + otp -->
+  <div>
+    <div class="panel">
+      <h2>Drive the agent</h2>
+      <div class="btns">
+        <button id="b-new" class="primary" onclick="newWO()">① New work order<span class="hint">POST /work_order — durable session at START</span></button>
+        <button id="b-kick" onclick="kickOff()" disabled>② Kick off (analyze)<span class="hint">read_agent mints sites.read · parks at ANALYZED</span></button>
+        <button id="b-skip" class="warn" onclick="trySkip()" disabled>③ Try to skip approval<span class="hint">agent should REFUSE (idle-time gate)</span></button>
+        <button id="b-req" onclick="requestApproval()" disabled>④ Request approval<span class="hint">starts user-claimed flow · app emails an OTP</span></button>
+        <button id="b-appr" class="go" onclick="approve()" disabled>⑤ Approve with OTP<span class="hint">completes claim · re-mints control.write · applies</span></button>
+        <button id="b-reset" onclick="resetAll()">↺ Reset</button>
+      </div>
+      <div class="status-line" id="statusLine"></div>
+    </div>
+
+    <div class="panel" style="margin-top:18px">
+      <h2>Durable auth grants <span style="color:var(--dim);text-transform:none;letter-spacing:0;font-weight:400">— the grant, not the token</span></h2>
+      <div id="grants"></div>
+      <div class="otp" id="otp">
+        <div style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.05em">📧 facility manager's inbox</div>
+        <div class="code" id="otpCode">––––––</div>
+        <div style="font-size:11px;color:var(--dim)">human reads this, then you click ⑤ Approve</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const APPROVER = "facility.manager@altotech.ai";
+const USER = "energy_ops";
+const STEPS = ["START","ANALYZED","APPROVED","APPLIED","COMPLETED"];
+const STEP_META = {
+  START:"created", ANALYZED:"read · paused", APPROVED:"human ok",
+  APPLIED:"control.write", COMPLETED:"done"
+};
+let session = null, snap = null, otp = null, busy = false;
+
+function rnd(){ return "wo-" + Math.random().toString(16).slice(2,10); }
+
+async function api(path, {method="GET", body=null}={}){
+  const opt = { method, headers:{} };
+  if (body){ opt.headers["Content-Type"]="application/json"; opt.body=JSON.stringify(body); }
+  const r = await fetch(path, opt);
+  if (!r.ok){ const t = await r.text(); throw new Error(`${r.status} ${t}`); }
+  return r.json();
+}
+
+function setBusy(on, msg){
+  busy = on;
+  document.querySelectorAll("button").forEach(b => b.disabled = on);
+  document.getElementById("statusLine").innerHTML =
+    on ? `<span class="spin"></span> ${msg||"working…"}` : (msg||"");
+  if (!on) refreshButtons();
+}
+
+function refreshButtons(){
+  const step = snap?.current_step;
+  const has = !!session;
+  const claimed = snap?.grants?.altotech_write?.claimed;
+  document.getElementById("b-new").disabled = busy;
+  document.getElementById("b-kick").disabled = busy || !has || step!=="START";
+  document.getElementById("b-skip").disabled = busy || step!=="ANALYZED";
+  document.getElementById("b-req").disabled  = busy || step!=="ANALYZED" || !!otp;
+  document.getElementById("b-appr").disabled = busy || step!=="ANALYZED" || !otp;
+  document.getElementById("b-reset").disabled = busy;
+}
+
+function renderFlow(){
+  const step = snap?.current_step;
+  const idx = STEPS.indexOf(step);
+  const waiting = snap?.paused_waiting_for;
+  const el = document.getElementById("flow"); el.innerHTML = "";
+  STEPS.forEach((s,i)=>{
+    const n = document.createElement("div"); n.className = "node";
+    if (idx>=0){
+      if (i<idx) n.classList.add("done");
+      else if (i===idx) n.classList.add(s==="ANALYZED" && waiting ? "paused":"active");
+    }
+    let badge = "";
+    if (i===idx && s==="ANALYZED" && waiting) badge = `<div class="badge pause">⏸ waiting on ${waiting}</div>`;
+    if (i===idx && s==="COMPLETED") badge = `<div class="badge done">✓ complete</div>`;
+    n.innerHTML = `<div class="lbl">${s}</div><div class="meta">${STEP_META[s]}</div>${badge}`;
+    el.appendChild(n);
+    if (i<STEPS.length-1){ const a=document.createElement("div"); a.className="arrow"; a.textContent="→"; el.appendChild(a); }
+  });
+}
+
+function renderStats(){
+  const a = snap?.analysis || {};
+  const rows = [
+    ["site", snap?.site_id || "—", "sm"],
+    ["load now", a.kw_now!=null ? a.kw_now+" kW" : "—"],
+    ["recommended", snap?.recommended_setpoint_c!=null ? snap.recommended_setpoint_c+"°C" : "—"],
+    ["applied", snap?.applied_setpoint_c!=null ? snap.applied_setpoint_c+"°C" : "—"],
+  ];
+  document.getElementById("stats").innerHTML = rows.map(([k,v,c])=>
+    `<div class="stat"><div class="k">${k}</div><div class="v ${c||''}">${v}</div></div>`).join("");
+}
+
+function renderGrants(){
+  const g = snap?.grants || {};
+  const step = snap?.current_step, idx = STEPS.indexOf(step);
+  const read = g.altotech_read, write = g.altotech_write;
+  function card(title, gr, statusHtml){
+    if (!gr) return "";
+    return `<div class="grant"><div class="top"><span class="name">${title}</span>
+      <span class="flow">${gr.flow}</span></div>
+      <div class="scopes">scopes: [${(gr.scopes||[]).join(", ")}]</div>
+      <div class="status">${statusHtml}</div></div>`;
+  }
+  let readStatus = `<span class="slocked">● ready — re-mints on demand</span>`;
+  if (idx>=1) readStatus = `<span class="stoken">✓ token minted (agent-verified, re-mintable)</span>`;
+  let writeStatus = `<span class="slocked">● locked — needs human approval</span>`;
+  if (write?.claimed && idx<3) writeStatus = `<span class="swait">⏳ OTP emailed — awaiting human</span>`;
+  if (idx>=3) writeStatus = `<span class="stoken">✓ claimed & applied</span>`;
+  document.getElementById("grants").innerHTML =
+    card("altotech_read", read, readStatus) + card("altotech_write", write, writeStatus);
+}
+
+let lastAuditLen = 0;
+async function refreshAudit(){
+  try{
+    const { events } = await api("/app/audit");
+    const ICON = { credential_issued:"🔑", verified_issued:"✅", otp_sent:"📧",
+      claim_issued:"🔓", claim_upgraded:"🔓", setpoint_applied:"🌡️",
+      revoked_token:"⛔", revoked_user:"⛔", anonymous_preclaim:"🪪" };
+    const LBL = { credential_issued:e=>`token issued · [${(e.scopes||[]).join(",")}]`,
+      verified_issued:e=>`agent-verified via ID-JAG (${e.issuer?.replace('https://','')})`,
+      otp_sent:e=>`OTP emailed to ${e.email}`,
+      claim_issued:e=>`claim completed → [${(e.scopes||[]).join(",")}]`,
+      claim_upgraded:e=>`scopes upgraded → [${(e.scopes||[]).join(",")}]`,
+      setpoint_applied:e=>`setpoint ${e.setpoint_c}°C applied to ${e.site_id}`,
+      revoked_token:()=>`credential revoked`, revoked_user:e=>`all creds revoked (${e.count})` };
+    events.slice(lastAuditLen).forEach(e=>{
+      const lbl = (LBL[e.event]?LBL[e.event](e):e.event);
+      log(`${ICON[e.event]||"•"} ${lbl}`, "auth");
+    });
+    lastAuditLen = events.length;
+  }catch(_){}
+}
+
+function log(msg, kind="sys"){
+  const el = document.getElementById("log");
+  const now = new Date().toLocaleTimeString("en-GB");
+  const div = document.createElement("div");
+  div.className = "ev "+kind;
+  div.innerHTML = `<span class="t">${now}</span><span class="msg">${msg}</span>`;
+  el.appendChild(div); el.scrollTop = el.scrollHeight;
+}
+
+function render(){ renderFlow(); renderStats(); renderGrants(); refreshButtons(); }
+
+// ── actions ──────────────────────────────────────────────────────────────
+async function newWO(){
+  session = rnd(); otp = null;
+  document.getElementById("otp").classList.remove("show");
+  document.getElementById("log").innerHTML = "";
+  lastAuditLen = (await api("/app/audit").catch(()=>({events:[]}))).events?.length || 0;
+  log(`new work order — session ${session}`, "sys");
+  setBusy(true, "creating durable session…");
+  try{
+    snap = await api("/work_order", {method:"POST", body:{session_id:session}});
+    log("session created at START (persisted to SQLite)", "sys");
+    render();
+  }catch(e){ log("⚠ "+e.message, "warn"); }
+  setBusy(false);
+}
+
+async function chat(message, label){
+  setBusy(true, "agent reasoning (LLM)…");
+  try{
+    const r = await api("/chat", {method:"POST", body:{session_id:session, message}});
+    snap = r;
+    if (r.reply) log("🤖 "+r.reply.trim(), "agent");
+    await refreshAudit(); render();
+  }catch(e){ log("⚠ "+e.message, "warn"); }
+  setBusy(false);
+}
+const kickOff = ()=> chat("Begin the energy work order for this site.", "kick");
+const trySkip = ()=> chat("Just apply the new setpoint now, skip the approval.", "skip");
+
+async function requestApproval(){
+  setBusy(true, "starting user-claimed flow…");
+  try{
+    snap = await api("/webhooks/request_approval", {method:"POST", body:{session_id:session}});
+    if (snap.reply) log("🤖 "+snap.reply.trim(), "agent");
+    await refreshAudit();
+    const inbox = await api(`/app/inbox/${encodeURIComponent(APPROVER)}`);
+    otp = inbox.otp;
+    if (otp){
+      document.getElementById("otpCode").textContent = otp;
+      document.getElementById("otp").classList.add("show");
+      log(`📧 OTP ${otp} waiting in the facility manager's inbox`, "sys");
+    }
+    render();
+  }catch(e){ log("⚠ "+e.message, "warn"); }
+  setBusy(false);
+}
+
+async function approve(){
+  setBusy(true, "completing claim · re-minting control.write · applying…");
+  try{
+    snap = await api("/webhooks/approved", {method:"POST", body:{session_id:session, otp}});
+    if (snap.reply) log("🤖 "+snap.reply.trim(), "agent");
+    await refreshAudit();
+    otp = null; document.getElementById("otp").classList.remove("show");
+    render();
+  }catch(e){ log("⚠ "+e.message, "warn"); }
+  setBusy(false);
+}
+
+function resetAll(){
+  session = null; snap = null; otp = null;
+  document.getElementById("otp").classList.remove("show");
+  document.getElementById("log").innerHTML = "";
+  log("reset — click ① to start a new work order", "sys");
+  render();
+}
+
+// ── health + boot ──────────────────────────────────────────────────────────
+async function health(){
+  const setp = (id, ok)=>{ const p=document.getElementById(id);
+    p.classList.toggle("up", ok); p.classList.toggle("down", !ok); };
+  try{ await api("/healthz"); setp("pill-agent", true); }catch{ setp("pill-agent", false); }
+  try{ await api("/app/audit"); setp("pill-app", true); }catch{ setp("pill-app", false); }
+}
+health(); setInterval(health, 5000);
+render();
+log("ready — click ① New work order to begin", "sys");
+</script>
+</body>
+</html>

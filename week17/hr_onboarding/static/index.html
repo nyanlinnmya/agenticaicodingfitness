@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HR Onboarding — long-running ADK agent visualizer</title>
+<style>
+  :root{
+    --bg:#0e1117; --panel:#161b22; --panel2:#1c2330; --line:#2b3440;
+    --txt:#e6edf3; --dim:#8b949e; --accent:#58a6ff; --green:#3fb950;
+    --amber:#d29922; --red:#f85149; --violet:#bc8cff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       background:var(--bg);color:var(--txt)}
+  header{display:flex;align-items:center;gap:14px;padding:14px 22px;border-bottom:1px solid var(--line);
+         background:var(--panel);flex-wrap:wrap}
+  header h1{font-size:16px;margin:0;font-weight:650}
+  header .sub{color:var(--dim);font-size:12px}
+  .pill{font-size:11px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--dim);
+        display:inline-flex;align-items:center;gap:6px}
+  .pill .dot{width:8px;height:8px;border-radius:50%;background:var(--dim)}
+  .pill.up .dot{background:var(--green)} .pill.down .dot{background:var(--red)}
+  .wrap{display:grid;grid-template-columns:1fr 360px;gap:18px;padding:18px 22px;max-width:1320px;margin:0 auto}
+  @media(max-width:980px){.wrap{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+  .panel h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:0 0 14px;font-weight:600}
+  /* state machine */
+  .flow{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+  .node{position:relative;flex:1;min-width:90px;text-align:center;padding:13px 6px;border:1.5px solid var(--line);
+        border-radius:10px;background:var(--panel2);transition:all .35s ease}
+  .node .lbl{font-weight:650;font-size:12px}
+  .node .meta{font-size:10px;color:var(--dim);margin-top:3px}
+  .node.done{border-color:var(--green);color:var(--green)}
+  .node.done .meta{color:var(--green);opacity:.8}
+  .node.active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(88,166,255,.18);background:rgba(88,166,255,.08)}
+  .node.paused{border-color:var(--amber);box-shadow:0 0 0 3px rgba(210,153,34,.18);background:rgba(210,153,34,.08);
+               animation:pulse 1.6s infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(210,153,34,.10)}50%{box-shadow:0 0 0 6px rgba(210,153,34,.28)}}
+  .arrow{color:var(--dim);font-size:16px;flex:0 0 auto}
+  .badge{display:inline-block;margin-top:7px;font-size:10px;padding:2px 7px;border-radius:6px}
+  .badge.pause{background:rgba(210,153,34,.18);color:var(--amber)}
+  .badge.done{background:rgba(63,185,80,.18);color:var(--green)}
+  /* sub-agents */
+  .agents{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+  .agent{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--panel2)}
+  .agent.act{border-color:var(--violet);box-shadow:0 0 0 2px rgba(188,140,255,.16)}
+  .agent .name{font-weight:650}
+  .agent .role{font-size:11px;color:var(--dim);margin-top:2px}
+  .agent .tools{font-family:ui-monospace,monospace;font-size:10.5px;color:var(--violet);margin-top:7px}
+  .agent .st{font-size:12px;margin-top:8px}
+  .deleg{text-align:center;color:var(--violet);font-size:11px;margin-top:8px;min-height:14px}
+  /* details */
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:13px}
+  .kv .k{color:var(--dim)}
+  .kv .v{font-family:ui-monospace,monospace;font-size:12px}
+  .empty{color:#586069;font-size:12px}
+  /* controls */
+  .btns{display:flex;flex-direction:column;gap:9px}
+  button{font:inherit;font-weight:600;padding:10px 14px;border-radius:9px;cursor:pointer;border:1px solid var(--line);
+         background:var(--panel2);color:var(--txt);text-align:left;transition:all .15s}
+  button .hint{display:block;font-weight:400;font-size:11px;color:var(--dim);margin-top:2px}
+  button:hover:not(:disabled){border-color:var(--accent)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  button.primary{background:rgba(88,166,255,.14);border-color:var(--accent)}
+  button.sign{background:rgba(63,185,80,.14);border-color:var(--green)}
+  button.warn{background:rgba(248,81,73,.10);border-color:var(--red)}
+  .log{max-height:320px;overflow:auto;font-size:12.5px}
+  .ev{display:flex;gap:9px;padding:7px 0;border-bottom:1px solid var(--line)}
+  .ev:last-child{border-bottom:0}
+  .ev .t{color:var(--dim);flex:0 0 56px;font-family:ui-monospace,monospace;font-size:11px}
+  .ev.agent .msg{color:var(--accent)} .ev.sys .msg{color:var(--dim)} .ev.warn .msg{color:var(--red)}
+  .ev.sub .msg{color:var(--violet)} .ev .msg{white-space:pre-wrap}
+  .status-line{font-size:12px;color:var(--dim);margin-top:10px;min-height:18px}
+  .spin{display:inline-block;width:12px;height:12px;border:2px solid var(--line);border-top-color:var(--accent);
+        border-radius:50%;animation:rot .7s linear infinite;vertical-align:-2px}
+  @keyframes rot{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🧑‍💼 HR Onboarding</h1>
+  <span class="sub">long-running ADK agent — durable state · pause · resume · sub-agent delegation</span>
+  <span style="flex:1"></span>
+  <span class="pill" id="pill"><span class="dot"></span>service :8077</span>
+</header>
+
+<div class="wrap">
+  <div>
+    <div class="panel">
+      <h2>Onboarding state machine</h2>
+      <div class="flow" id="flow"></div>
+      <div class="deleg" id="deleg"></div>
+      <div class="agents" id="agents"></div>
+    </div>
+    <div class="panel" style="margin-top:18px">
+      <h2>Lifecycle timeline <span style="color:var(--dim);text-transform:none;letter-spacing:0;font-weight:400">— coordinator replies (blue) · delegation (purple)</span></h2>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="panel">
+      <h2>Drive the agent</h2>
+      <div class="btns">
+        <button id="b-new" class="primary" onclick="newOnb()">① New onboarding<span class="hint">POST /onboard — durable session at START</span></button>
+        <button id="b-kick" onclick="kickOff()" disabled>② Send welcome packet<span class="hint">provide new-hire details · pauses at WELCOME_SENT</span></button>
+        <button id="b-skip" class="warn" onclick="trySkip()" disabled>③ Try to skip the wait<span class="hint">agent should REFUSE (idle-time gate)</span></button>
+        <button id="b-sign" class="sign" onclick="sign()" disabled>④ Sign documents (webhook)<span class="hint">resume → delegate to it_agent → IT_PROVISIONED</span></button>
+        <button id="b-track" onclick="track()" disabled>⑤ Provide hardware tracking<span class="hint">records tracking · pauses for delivery</span></button>
+        <button id="b-deliver" class="sign" onclick="deliver()" disabled>⑥ Deliver hardware (webhook)<span class="hint">resume → day-one schedule → COMPLETED</span></button>
+        <button id="b-reset" onclick="resetAll()">↺ Reset</button>
+      </div>
+      <div class="status-line" id="statusLine"></div>
+    </div>
+    <div class="panel" style="margin-top:18px">
+      <h2>New-hire record <span style="color:var(--dim);text-transform:none;letter-spacing:0;font-weight:400">— accumulates in durable state</span></h2>
+      <div id="details"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const USER = "hr_coordinator";
+const STEPS = ["START","WELCOME_SENT","DOCUMENTS_SIGNED","IT_PROVISIONED","HARDWARE_DELIVERED","COMPLETED"];
+const META = {START:"created", WELCOME_SENT:"packet sent · paused", DOCUMENTS_SIGNED:"signed",
+  IT_PROVISIONED:"accounts ready · paused", HARDWARE_DELIVERED:"laptop arrived", COMPLETED:"done"};
+let session=null, snap=null, busy=false;
+
+function rnd(){ return "onb-" + Math.random().toString(16).slice(2,10); }
+async function api(path,{method="GET",body=null}={}){
+  const opt={method,headers:{}}; if(body){opt.headers["Content-Type"]="application/json";opt.body=JSON.stringify(body);}
+  const r=await fetch(path,opt); if(!r.ok){throw new Error(`${r.status} ${await r.text()}`);} return r.json();
+}
+function setBusy(on,msg){ busy=on;
+  document.querySelectorAll("button").forEach(b=>b.disabled=on);
+  document.getElementById("statusLine").innerHTML = on?`<span class="spin"></span> ${msg||"agent working…"}`:(msg||"");
+  if(!on) refreshButtons();
+}
+function refreshButtons(){
+  const step=snap?.current_step, has=!!session, pend=snap?.pending_signals||[];
+  document.getElementById("b-new").disabled=busy;
+  document.getElementById("b-kick").disabled=busy||!has||step!=="START";
+  document.getElementById("b-skip").disabled=busy||step!=="WELCOME_SENT";
+  document.getElementById("b-sign").disabled=busy||step!=="WELCOME_SENT";
+  document.getElementById("b-track").disabled=busy||step!=="IT_PROVISIONED"||pend.includes("hardware_delivered");
+  document.getElementById("b-deliver").disabled=busy||step!=="IT_PROVISIONED"||!pend.includes("hardware_delivered");
+  document.getElementById("b-reset").disabled=busy;
+}
+
+function renderFlow(){
+  const step=snap?.current_step, idx=STEPS.indexOf(step), waiting=snap?.paused_waiting_for;
+  const el=document.getElementById("flow"); el.innerHTML="";
+  STEPS.forEach((s,i)=>{
+    const n=document.createElement("div"); n.className="node";
+    if(idx>=0){ if(i<idx)n.classList.add("done");
+      else if(i===idx)n.classList.add((s==="WELCOME_SENT"||s==="IT_PROVISIONED")&&waiting?"paused":"active"); }
+    let badge="";
+    if(i===idx && waiting) badge=`<div class="badge pause">⏸ ${waiting}</div>`;
+    if(i===idx && s==="COMPLETED") badge=`<div class="badge done">✓ complete</div>`;
+    n.innerHTML=`<div class="lbl">${s}</div><div class="meta">${META[s]}</div>${badge}`;
+    el.appendChild(n);
+    if(i<STEPS.length-1){const a=document.createElement("div");a.className="arrow";a.textContent="→";el.appendChild(a);}
+  });
+  // delegation hint
+  const d=document.getElementById("deleg");
+  d.textContent = (step==="DOCUMENTS_SIGNED"||step==="IT_PROVISIONED")
+    ? "↳ coordinator delegated IT provisioning to it_agent" : "";
+}
+
+function renderAgents(){
+  const step=snap?.current_step, det=snap?.new_hire_details||{};
+  const itActive = step==="DOCUMENTS_SIGNED";
+  const itDone = !!det.accounts;
+  const cards=[
+    {name:"hr_onboarding_coordinator", role:"runs the whole workflow, pauses & resumes",
+     tools:"send_welcome_packet · check_hardware_delivery · send_day_one_schedule",
+     act: !itActive, st: step==="COMPLETED"?'<span style="color:var(--green)">✓ onboarding complete</span>':'● coordinating'},
+    {name:"it_agent", role:"focused sub-agent: provisions software accounts",
+     tools:"provision_software_accounts",
+     act: itActive, st: itDone?'<span style="color:var(--green)">✓ provisioned email + Slack</span>':(itActive?'<span style="color:var(--violet)">▶ provisioning…</span>':'○ idle')},
+  ];
+  document.getElementById("agents").innerHTML = cards.map(c=>`
+    <div class="agent ${c.act?'act':''}"><div class="name">${c.name}</div>
+      <div class="role">${c.role}</div><div class="tools">${c.tools}</div>
+      <div class="st">${c.st}</div></div>`).join("");
+}
+
+function renderDetails(){
+  const d=snap?.new_hire_details||{};
+  const rows=[["name",d.name],["email",d.email],["start date",d.start_date],
+    ["corp username",d.corp_username],["accounts",(d.accounts||[]).join(", ")],
+    ["hardware tracking",d.hardware_tracking_id]].filter(r=>r[1]);
+  document.getElementById("details").innerHTML = rows.length
+    ? `<div class="kv">${rows.map(([k,v])=>`<div class="k">${k}</div><div class="v">${v}</div>`).join("")}</div>`
+    : `<div class="empty">— no details yet; click ② to start —</div>`;
+}
+
+function log(msg,kind="sys"){ const el=document.getElementById("log");
+  const now=new Date().toLocaleTimeString("en-GB"); const div=document.createElement("div");
+  div.className="ev "+kind; div.innerHTML=`<span class="t">${now}</span><span class="msg">${msg}</span>`;
+  el.appendChild(div); el.scrollTop=el.scrollHeight;
+}
+function render(){ renderFlow(); renderAgents(); renderDetails(); refreshButtons(); }
+
+async function newOnb(){
+  session=rnd(); document.getElementById("log").innerHTML="";
+  log(`new onboarding — session ${session}`,"sys");
+  setBusy(true,"creating durable session…");
+  try{ snap=await api("/onboard",{method:"POST",body:{session_id:session}});
+    log("session created at START (persisted to SQLite)","sys"); render();
+  }catch(e){ log("⚠ "+e.message,"warn"); }
+  setBusy(false);
+}
+async function chat(message){
+  setBusy(true,"coordinator reasoning (LLM)…");
+  try{ const r=await api("/chat",{method:"POST",body:{session_id:session,message}});
+    snap=r; if(r.reply) log("🤖 "+r.reply.trim(),"agent");
+    if(r.current_step==="DOCUMENTS_SIGNED"||r.current_step==="IT_PROVISIONED") log("↳ delegated to it_agent","sub");
+    render();
+  }catch(e){ log("⚠ "+e.message,"warn"); } setBusy(false);
+}
+const kickOff=()=>chat("Start onboarding for Jane Doe, email jane@example.com, start date 2026-07-01.");
+const trySkip=()=>chat("Can we skip the signature and provision IT accounts right now?");
+const track=()=>chat("The laptop shipped, tracking id 1Z999AA10123456784.");
+
+async function webhook(path,label){
+  setBusy(true,"webhook → resume (LLM)…");
+  try{ const r=await api(path,{method:"POST",body:{session_id:session}});
+    snap=r; log(`📨 webhook: ${label}`,"sys"); if(r.reply) log("🤖 "+r.reply.trim(),"agent");
+    if(r.current_step==="IT_PROVISIONED") log("↳ it_agent provisioned accounts","sub");
+    render();
+  }catch(e){ log("⚠ "+e.message,"warn"); } setBusy(false);
+}
+const sign=()=>webhook("/webhooks/document_signed","document_signed");
+const deliver=()=>webhook("/webhooks/hardware_delivered","hardware_delivered");
+
+function resetAll(){ session=null; snap=null; document.getElementById("log").innerHTML="";
+  log("reset — click ① to start a new onboarding","sys"); render(); }
+
+async function health(){ const p=document.getElementById("pill");
+  try{ await api("/healthz"); p.classList.add("up"); p.classList.remove("down"); }
+  catch{ p.classList.remove("up"); p.classList.add("down"); } }
+health(); setInterval(health,5000);
+render(); log("ready — click ① New onboarding to begin","sys");
+</script>
+</body>
+</html>

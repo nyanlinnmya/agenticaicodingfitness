@@ -44,10 +44,37 @@ hr_onboarding/
 ├── config.py             → model selection (alto/anthropic/gemini), DB URL, .env loader
 ├── agent.py              → tools (ToolContext), instructions, coordinator + it_agent, Runner
 ├── resume_handler.py     → OnboardingResumeHandler: run_async(state_delta=…) on a webhook
-├── server.py             → the long-running FastAPI service (the background process)
+├── server.py             → the long-running FastAPI service (also serves the visualizer at /)
 ├── client.py             → a driver that walks one onboarding through the full lifecycle
+├── tutorial_server.py    → interactive web guide (Steps 0–13 + cleanup); manages the service
+├── static/guide.html     → the clickable step-by-step guide (live terminal output)
+├── static/index.html     → the live visualizer (state machine · sub-agents · timeline)
+├── TUTORIAL.md           → the same walkthrough as prose, runnable by hand
 └── requirements.txt
 ```
+
+---
+
+## Try it in the browser (recommended)
+
+Two web views, both served with one command each:
+
+```bash
+uv pip install -r week17/hr_onboarding/requirements.txt
+.venv/bin/python week17/hr_onboarding/tutorial_server.py    # → http://127.0.0.1:8070
+```
+
+- **Interactive guide** (`tutorial_server.py`, port 8070) — click through every
+  step of `TUTORIAL.md`, watch each command stream live in an in-page terminal,
+  start/stop the service, and demolish/start-over. Auto-picks a free port if
+  8070 is taken (`ONBOARDING_GUIDE_PORT` to override).
+- **Live visualizer** (the service's own `/`, port 8077) — a real-time view of
+  the state machine (with ⏸ pause badges), the coordinator → `it_agent`
+  delegation, the new-hire record filling in, and an event timeline. Drive the
+  whole onboarding with buttons. Open it once the service is running, or via the
+  guide's "Open the live visualizer" step.
+
+Prefer the command line? The `Setup` / `Run it` sections below still apply.
 
 ---
 

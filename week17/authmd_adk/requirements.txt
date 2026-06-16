@@ -1,0 +1,23 @@
+# Week 17 — auth.md × ADK: authenticating long-running agents end to end.
+#
+# Two halves with different needs:
+#   • Part A (app_server) + the authmd_client + run_authmd_demo.py run FULLY
+#     OFFLINE — pure HTTP + crypto, no model, no google-adk. Just the first block.
+#   • Part B (agent.py / agent_server.py / run_full_demo.py) is a REAL ADK agent
+#     and additionally needs google-adk + a model credential (the second block).
+
+# ── Part A + the auth.md client (offline-capable) ───────────────────────────
+fastapi>=0.110
+uvicorn[standard]>=0.27
+httpx>=0.27
+pydantic>=2.6
+pyjwt[crypto]>=2.8        # RS256 ID-JAG signing + JWKS verification (real crypto)
+
+# ── Part B: the long-running ADK agent (needs a model) ──────────────────────
+google-adk>=2.0           # Agent, Runner, DatabaseSessionService, FunctionTool
+litellm>=1.40             # run ADK on Claude / the Alto gateway instead of Gemini
+greenlet>=3.0             # required by SQLAlchemy async (DatabaseSessionService)
+aiosqlite>=0.20           # the sqlite+aiosqlite:// async driver
+
+# install everything:  uv pip install -r week17/authmd_adk/requirements.txt
+# offline subset only:  uv pip install "fastapi" "uvicorn[standard]" httpx pydantic "pyjwt[crypto]"
