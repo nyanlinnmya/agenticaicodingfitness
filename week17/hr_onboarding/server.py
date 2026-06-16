@@ -30,6 +30,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # package-local imports
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from google.genai import types
 from pydantic import BaseModel
 
@@ -37,6 +39,8 @@ from agent import build_runner, build_session_service
 from config import APP_NAME, DEFAULT_USER_ID, make_model, model_label
 from onboarding_steps import OnboardingStep, initial_state
 from resume_handler import OnboardingResumeHandler
+
+STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 # Shared, process-wide objects (built once at startup).
 _state: dict = {}
@@ -56,6 +60,16 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="HR Onboarding — long-running agent", lifespan=lifespan)
+
+# Dev-only: lets the visualizer run even if opened from another origin.
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"],
+                   allow_headers=["*"])
+
+
+@app.get("/")
+async def ui() -> FileResponse:
+    """The live state-machine visualizer (single-page app)."""
+    return FileResponse(STATIC_DIR / "index.html")
 
 
 # ── request/response models ──────────────────────────────────────────────────
@@ -154,5 +168,7 @@ async def status(user_id: str, session_id: str) -> dict:
 
 
 if __name__ == "__main__":
+    import os
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8077)
+    port = int(os.environ.get("ONBOARDING_PORT", "8077"))
+    uvicorn.run(app, host="127.0.0.1", port=port)

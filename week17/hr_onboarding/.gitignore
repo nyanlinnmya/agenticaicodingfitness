@@ -1,0 +1,6 @@
+# generated at runtime — do not commit
+# DatabaseSessionService SQLite store
+*.db
+# tutorial_server's managed-server log
+.logs/
+__pycache__/
