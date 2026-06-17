@@ -17,12 +17,28 @@ We emphasize a **practice-first** approach (Vibe Coding). No long lectures, just
 
 Missed a session or want to review at your own pace? We packaged the **entire course (weeks 2–17)** into a shareable **Claude Code plugin** — **18 bite-sized skills** (one per concept) that teach the idea, show runnable code (pointing at the real `weekN/` files here), and walk you through a hands-on **$0 lab** (a tiny `MockLLM` so you need no API key to start). Just ask Claude in plain English and the right skill loads automatically.
 
+**Install** (run these in any Claude Code session):
+
 ```
 /plugin marketplace add kwarodom/agenticaicodingfitness
 /plugin install agentic-coding-fitness@agentic-coding-fitness
 ```
 
 Then try: *"Recap the whole course and tell me which skill to start with."*
+
+### 🔄 Already installed? Pull the latest version mid-session
+
+We ship new skills as the course grows (we're on **v2.1.0 — 18 skills**). To grab the newest version **without restarting**, run these three in your current session:
+
+```
+/plugin marketplace update agentic-coding-fitness                 # 1. refresh the catalog from GitHub
+/plugin install agentic-coding-fitness@agentic-coding-fitness     # 2. fetch the latest version
+/reload-plugins                                                   # 3. activate the new skills now
+```
+
+> There's no separate `/plugin update` command — **reinstalling** pulls the latest version from the refreshed marketplace. Step 1's argument is the *marketplace name* (`agentic-coding-fitness`), not the GitHub repo.
+
+**Prefer clicking?** Run `/plugin` for the interactive manager: **Marketplaces** tab → select *agentic-coding-fitness* → **Update**, then **Installed** tab → select the plugin → **Reinstall**, then `/reload-plugins`. (You can also toggle **Enable auto-update** on the marketplace so new versions are fetched at startup.)
 
 Covers: LLM basics · tool use · agent loops · MCP & skills · RAG · multi-agent systems · production & observability · agent evaluation/CI · knowledge-graph memory · production GraphRAG · choosing models & patterns · the NVIDIA NeMo Agent Toolkit · long-running & distributed agents (Google ADK durable sessions, pause/resume, auth.md, A2A fleets) · vibe-coding & security · the A2A protocol · skill-authoring. See [`plugins/agentic-coding-fitness/`](plugins/agentic-coding-fitness/) for details.
 
