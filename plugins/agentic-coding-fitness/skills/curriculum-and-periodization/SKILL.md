@@ -1,6 +1,6 @@
 ---
 name: curriculum-and-periodization
-description: "The syllabus and learning-path index for the whole program — what to learn, in what order, and why. Maps the blueprint's 16-week progressive-overload plan (Foundation → Strength → Endurance → Performance, with deload weeks) onto THIS repo's real weeks 2–15, names the plugin skill that recaps each week, and hands out suggested paths for total beginners through production engineers. Covers the four overload levers (intensity, volume, complexity, autonomy), the daily Warm-Up → Main Workout → Cool-Down → Recovery session, and the four certification tiers. Use when someone asks 'where do I start?', 'what's the learning path / curriculum / syllabus?', 'what order should I learn this in?', 'how is the course structured?', 'what week am I on / what's next?', or wants a big-picture map of the whole program."
+description: "The syllabus and learning-path index for the whole program — what to learn, in what order, and why. Maps the blueprint's 16-week progressive-overload plan (Foundation → Strength → Endurance → Performance, with deload weeks) onto THIS repo's real weeks 2–17, names the plugin skill that recaps each week, and hands out suggested paths for total beginners through production engineers. Covers the four overload levers (intensity, volume, complexity, autonomy), the daily Warm-Up → Main Workout → Cool-Down → Recovery session, and the four certification tiers. Use when someone asks 'where do I start?', 'what's the learning path / curriculum / syllabus?', 'what order should I learn this in?', 'how is the course structured?', 'what week am I on / what's next?', or wants a big-picture map of the whole program."
 when_to_use: "Learner wants to know where to start, what order to learn the skills in, how the whole program is structured into phases/weeks, or which two skills to do next — i.e. they need the syllabus and a path, not a single concept."
 ---
 
@@ -21,7 +21,7 @@ Athletes don't lift max weight on day one. They **periodize**: cycle through pha
 | **① Foundation** | Preparatory — 50–75% intensity, high volume | The base: talk to a model, give it tools, run the loop | Conscious incompetence | `llm-fundamentals`, `tool-use`, `agent-loops` |
 | **② Strength** | Basic strength — heavier loads, lower volume | Single-agent mastery under constraint; reusable tools & knowledge | Conscious competence | `mcp-and-skills`, `rag-knowledge-agents` |
 | **③ Endurance** | Hypertrophy — sustained moderate load | Systems that *run reliably*: many agents, eval, observability, cost | Consolidated competence | `multi-agent-systems`, `agent-evaluation`, `production-and-observability`, `models-and-patterns` |
-| **④ Performance** | Peaking — 85–100%, explosive | Durable memory, GraphRAG, capstone integration | Unconscious competence | `agent-memory-graphs`, `knowledge-graph-mastery` |
+| **④ Performance** | Peaking — 85–100%, explosive | Durable memory, GraphRAG, production frameworks, long-running & distributed fleets | Unconscious competence | `agent-memory-graphs`, `knowledge-graph-mastery`, `nemo-agent-toolkit`, `long-running-and-distributed-agents` |
 
 ### The four overload levers
 
@@ -36,13 +36,13 @@ You make training harder by turning exactly the knobs that matter — never all 
 
 > 🏋️ **Deload weeks** are not breaks — they're consolidation. The blueprint drops all three of intensity/volume/complexity by ~40% at **weeks 4, 8, 12** so the new skill *sticks* (supercompensation: you get stronger *after* the rest, not during the grind). In this repo, the natural deloads are the integration weeks (the full-stack app in week6, the mastery recap in week11) where you compose what you already learned instead of adding a new pattern.
 
-> ⚠️ **Conceptual:** the clean "16 weeks, four phases, deloads at 4/8/12" structure (and the *16-Week Progressive Overload Profile* figure where intensity/volume/complexity rise and dip together) is the **blueprint's ideal**, drawn from fitness periodization + the 4C/ID instructional model. The **runnable** curriculum in this repo is **weeks 2–15** — see Part B for the honest mapping.
+> ⚠️ **Conceptual:** the clean "16 weeks, four phases, deloads at 4/8/12" structure (and the *16-Week Progressive Overload Profile* figure where intensity/volume/complexity rise and dip together) is the **blueprint's ideal**, drawn from fitness periodization + the 4C/ID instructional model. The **runnable** curriculum in this repo is **weeks 2–17** — see Part B for the honest mapping.
 
 ---
 
 ## Part B — The week-by-week map (blueprint ideal → this repo)
 
-The blueprint describes an idealized 16 weeks. This repo has the **real, runnable weeks 2–15**. They line up *closely* but not perfectly — the table below is the honest bridge. Cite the repo column; treat the blueprint column as the "why this order."
+The blueprint describes an idealized 16 weeks. This repo has the **real, runnable weeks 2–17** (one past the blueprint). They line up *closely* but not perfectly — the table below is the honest bridge. Cite the repo column; treat the blueprint column as the "why this order."
 
 | Real week (this repo) | Concept | Recap skill | Blueprint's idealized slot |
 |---|---|---|---|
@@ -58,8 +58,10 @@ The blueprint describes an idealized 16 weeks. This repo has the **real, runnabl
 | **week11** — mastery | pick models/frameworks/patterns; pattern playground | `models-and-patterns` | ~W12 integration + governance |
 | **week14** — graph memory | Neo4j, GraphRAG, durable multi-agent memory | `agent-memory-graphs` | ~W13–14 capstone-grade memory |
 | **week15** — production GraphRAG | Cypher+GDS, ingestion, 7 frameworks, RAGAS, CI gate | `knowledge-graph-mastery` | ~W15–16 polish + certification |
+| **week16** — production frameworks | NVIDIA NeMo Agent Toolkit: register tools, YAML workflows, supervisor + HITL, observability | `nemo-agent-toolkit` | ~W12 framework adoption + governance |
+| **week17** — long-running & distributed | Google ADK durable state machines, pause/resume, webhooks, auth.md credentials, A2A fleet | `long-running-and-distributed-agents`, `a2a-protocol` | ~W13–14 capstone-grade orchestration |
 
-**The biggest divergence to call out:** the blueprint puts **MCP in Week 1** ("the USB port of AI coding" — the gateway skill). This repo reaches MCP in **week7**, *after* you've felt the pain of hand-wiring tools (week3) and run a full agent loop (week5). Both are defensible: the blueprint front-loads the ecosystem standard; this repo front-loads the fundamentals so MCP lands as "oh, *that's* what this standardizes." There's also no week12/13/16 here — capstone polish and Demo Day are the blueprint's ideal, not runnable repo code.
+**The biggest divergence to call out:** the blueprint puts **MCP in Week 1** ("the USB port of AI coding" — the gateway skill). This repo reaches MCP in **week7**, *after* you've felt the pain of hand-wiring tools (week3) and run a full agent loop (week5). Both are defensible: the blueprint front-loads the ecosystem standard; this repo front-loads the fundamentals so MCP lands as "oh, *that's* what this standardizes." There's no week12/13 here, and the repo runs one week past the blueprint's 16 — **week17** is the real fleet/long-running capstone (durable agents + A2A) that the blueprint only gestured at.
 
 > 📁 Class repo: `week2/claudeapicall.py` — your very first API call (Foundation starts here).
 > 📁 Class repo: `week3/toolsuse.py` — the model calling your functions for the first time.
@@ -72,6 +74,8 @@ The blueprint describes an idealized 16 weeks. This repo has the **real, runnabl
 > 📁 Class repo: `week11/README.md` — the mastery recap: model wizard, pattern playground, 25-question quiz.
 > 📁 Class repo: `week14/agent_memory.py` + `week14/lab1_hotel_mas.py` — durable graph memory for a multi-agent hotel.
 > 📁 Class repo: `week15/kg_mastery/README.md` — the full production-GraphRAG deep dive (Parts 1–6).
+> 📁 Class repo: `week16/multi_agent_orchestration.ipynb` — NeMo Agent Toolkit: register tools, compose a YAML workflow, supervisor → specialists with HITL.
+> 📁 Class repo: `week17/checkpoints/checkpoint1_state_machine.py` → `checkpoint6_fleet.py` — long-running durable agents (pause/resume) + A2A fleet, offline; plus the live `week17/hr_onboarding/` and `week17/authmd_adk/` services.
 
 > The single best "you are here" overview is the one-page course map in `models-and-patterns` — it lines up the taught weeks against their skills in a single screen.
 
@@ -142,6 +146,8 @@ SYLLABUS = [  # (real repo week, recap skill, phase)
     ("week11", "models-and-patterns",    "Endurance"),
     ("week14", "agent-memory-graphs",    "Performance"),
     ("week15", "knowledge-graph-mastery","Performance"),
+    ("week16", "nemo-agent-toolkit",     "Performance"),
+    ("week17", "long-running-and-distributed-agents", "Performance"),
 ]
 
 class MockLLM:

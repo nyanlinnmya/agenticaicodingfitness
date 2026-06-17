@@ -238,6 +238,8 @@ This connects straight to `production-and-observability` (cost + tracing) — th
 | **CrewAI** | Role-based teams, sequential/parallel crews | Agents + Tasks + Crew |
 | **LangGraph** | Stateful graphs, routing, cycles, control flow | Nodes + shared state + edges |
 | **AutoGen / AG2** | Conversational agents talking to each other | Chat between agents |
+| **NeMo Agent Toolkit** (W16) | Config-driven production multi-agent on the NVIDIA stack; built-in eval/observability | Register tools → compose in YAML → observe (wraps LangGraph/LlamaIndex) — see `nemo-agent-toolkit` |
+| **Google ADK** (W17) | Long-running agents that pause for days, durable sessions, in-process `sub_agents` | Durable state machine + `DatabaseSessionService` — see `long-running-and-distributed-agents` |
 | **Anthropic SDK + asyncio** | Full control, custom orchestration, swarms | You write the loop |
 
 There's no "best" — pick by the shape of your problem. Stuck choosing? See the `models-and-patterns` skill.
@@ -329,7 +331,8 @@ Hierarchical mode is convenient but **leaky**: the manager sometimes does the wo
 
 **Mixing frameworks?** That's the real end-state — a LangGraph orchestrator delegating to a CrewAI nutrition team. The standard for that cross-framework hop is the `a2a-protocol` skill (Agent Cards + task delegation); MCP connects each agent to its *tools*, A2A connects *agents to agents*.
 
-> 📁 Class repo: `week15/smart_hotel_mas/README.md` — a 5-agent CrewAI crew (Sensor · Energy · Memory · Alert · Report) over a 4-layer memory stack; the capstone of everything here.
+> 📁 Class repo: `week15/smart_hotel_mas/README.md` — a 5-agent CrewAI crew (Sensor · Energy · Memory · Alert · Report) over a 4-layer memory stack; the in-process capstone.
+> 📁 **Beyond one process:** `week17/` stretches this MAS across *time* (long-running, pause-for-days, durable sessions) and *services* (A2A across teams/frameworks) — the `long-running-and-distributed-agents` and `a2a-protocol` skills. That's the L3 fleet layer above this one.
 
 ---
 
