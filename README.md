@@ -15,7 +15,7 @@ We emphasize a **practice-first** approach (Vibe Coding). No long lectures, just
 
 ## 📚 Catching up? Install the Bootcamp Plugin
 
-Missed a session or want to review at your own pace? We packaged the **entire course** into a shareable **Claude Code plugin** — 8 bite-sized skills (one per concept) that teach the idea, show runnable code, and walk you through a hands-on lab. Just ask Claude in plain English and the right skill loads automatically.
+Missed a session or want to review at your own pace? We packaged the **entire course (weeks 2–17)** into a shareable **Claude Code plugin** — **18 bite-sized skills** (one per concept) that teach the idea, show runnable code (pointing at the real `weekN/` files here), and walk you through a hands-on **$0 lab** (a tiny `MockLLM` so you need no API key to start). Just ask Claude in plain English and the right skill loads automatically.
 
 ```
 /plugin marketplace add kwarodom/agenticaicodingfitness
@@ -24,28 +24,75 @@ Missed a session or want to review at your own pace? We packaged the **entire co
 
 Then try: *"Recap the whole course and tell me which skill to start with."*
 
-Covers: LLM basics · tool use · agent loops · MCP & skills · RAG · multi-agent systems · knowledge-graph memory · choosing models & patterns. See [`plugins/agentic-coding-fitness/`](plugins/agentic-coding-fitness/) for details.
+Covers: LLM basics · tool use · agent loops · MCP & skills · RAG · multi-agent systems · production & observability · agent evaluation/CI · knowledge-graph memory · production GraphRAG · choosing models & patterns · the NVIDIA NeMo Agent Toolkit · long-running & distributed agents (Google ADK durable sessions, pause/resume, auth.md, A2A fleets) · vibe-coding & security · the A2A protocol · skill-authoring. See [`plugins/agentic-coding-fitness/`](plugins/agentic-coding-fitness/) for details.
 
 ## 📂 Repository Contents 
 
-The project is structured week-by-week as our complexity scales up:
+The project is structured week-by-week as our complexity scales up — from a single API call to long-running, distributed agent fleets. Each week maps to a plugin skill (above) that recaps it with a $0 lab.
 
-### 🔹 Week 2: Claude API Foundations
-Understanding how to talk to modern LLMs programmatically.
-- `week2/claudeapicall.py`: Basic single-turn API requests.
-- `week2/claudestreamingapi.py`: Streaming tokens in real-time for better UX.
-- `week2/claudemulti_turn.py`: Managing conversational state and history.
+### Phase ① Foundation — talk → tools → agents
 
-### 🔹 Week 3: Tool Use & Smart Assistants
-Teaching our AI agents how to interact with external services.
-- `week3/toolsuse.py`: Introduction to function calling (weather, calculator, web search).
-- `week3/buildsmartassistant3tools.py`: A fully-fledged assistant script.
-- **Tapo Smart Plug Integration**: (`check_tapo.py`, `scan.py`, `tapo_config.json`) Creating a local HTTP wrapper to let Claude natively control TP-Link Tapo L530 smart lights.
+#### 🔹 Week 2: Claude API Foundations
+Talking to modern LLMs programmatically. → skill `llm-fundamentals`
+- `week2/claudeapicall.py`: basic single-turn API requests · `week2/claudestreamingapi.py`: streaming tokens · `week2/claudemulti_turn.py`: conversational state & history · `week2/lab/`: $0 practice drills.
 
-### 🔹 Week 4: Autonomous Pipelines & Hardware
-Building chains of actions and jumping into IoT physical hardware.
-- `week4/pipeline.py`: An autonomous AI Research Pipeline that uses `duckduckgo-search` to browse the web, simulate a multi-agent synthesis process, score its own quality, and output Markdown reports. (With workflows to export findings right into NotebookLM!).
-- `week4/dronecontrol.py`: Automating flight patterns and physical tricks using a DJI Tello Drone (`djitellopy`), merging spatial IoT with programmable scripts.
+#### 🔹 Week 3: Tool Use & Smart Assistants
+Teaching agents to call external services (function calling). → skill `tool-use`
+- `week3/toolsuse.py`: function calling (weather, calculator, web search) · `week3/buildsmartassistant3tools.py`: a full assistant · **Tapo Smart Plug Integration** (`check_tapo.py`, `scan.py`, `tapo_config.json`): a local HTTP wrapper so Claude controls TP-Link Tapo L530 lights.
+
+#### 🔹 Week 4: Autonomous Pipelines & Hardware
+Chaining actions and reaching into physical IoT. → skill `agent-loops`
+- `week4/pipeline.py`: an autonomous research pipeline (web search → multi-agent synthesis → self-scoring → Markdown reports, with NotebookLM export) · `week4/dronecontrol.py`: flight patterns on a DJI Tello drone (`djitellopy`) · `week4/openrouterfreemodel.py`: a free-model gateway.
+
+#### 🔹 Week 5: The Agent Loop
+The reusable REASON → ACT → OBSERVE loop that turns a tool-user into an agent. → skill `agent-loops`
+- `week5/autoagent.py`: the reusable bounded `Agent` class (ReAct + stop conditions).
+
+### Phase ② Strength — single-agent mastery, reusable tools & knowledge
+
+#### 🔹 Week 6: Full-Stack Agent App (deload / integration)
+An agent put behind a real API. → skill `vibe-coding-and-security`
+- `week6/src/` (Express/TypeScript/Postgres) · `week6/CLAUDE.md` + `AGENTS.md`: context engineering in practice.
+
+#### 🔹 Week 7: MCP & Skills
+Reusable tools (MCP) and reusable know-how (Skills). → skill `mcp-and-skills`
+- `week7/mcpserver.py`, `week7/mcpfilesystem.py`: MCP servers · `week7/agent.py`, `week7/agenttooldt.py`: an MCP client agent · `week7/skill.md`: a worked Skill.
+
+#### 🔹 Week 8: RAG — Knowledge Agents
+Ground answers in your own documents (and prove it with RAGAS). → skill `rag-knowledge-agents`
+- `week8/Week8_RAG_Knowledge_Agents_Lab.pdf`: the RAG lab.
+
+### Phase ③ Endurance — systems that run reliably
+
+#### 🔹 Week 9: Multi-Agent Systems
+Sequential / router / parallel-swarm orchestration across frameworks. → skill `multi-agent-systems`
+- `week9/ex1_crewai_sequential.py` (CrewAI) · `week9/ex2_LangGraphSupportGraph.py` (LangGraph router) · `week9/ex3_ParallelSwarm.py` (asyncio swarm) · plus AG2/Anthropic comparisons and 3 workshop PDFs.
+
+#### 🔹 Week 10: Production & Observability
+Make a prototype something you can *see, stop, and afford*. → skills `production-and-observability`, `agent-evaluation`
+- `week10/notebooks/01_hello_graph.py` → `05_hybrid_sdk.py`: a support-routing system gaining a supervisor, `SqliteSaver` checkpointing + HITL `interrupt()`, LangSmith tracing, then a Claude Agent SDK hybrid · `week10/GUIDE.md`, `solutions/`.
+
+#### 🔹 Week 11: Mastery — Models & Patterns
+Pick the right model, framework, and pattern; the 12-pattern taxonomy. → skills `models-and-patterns`, `agent-drills`
+- `week11/index.html`: model wizard + pattern playground + quiz · `week11/exercises/`: **14 graded MAS drills** (ex01–ex14, Beginner → Expert).
+
+### Phase ④ Performance — memory, GraphRAG, production frameworks, fleets
+
+#### 🔹 Week 14: Agent Memory with Knowledge Graphs
+Durable memory agents remember across runs (Neo4j + GraphRAG). → skill `agent-memory-graphs`
+- `week14/agent_memory.py`, `week14/hotel_kg_builder.py`, `week14/lab1_hotel_mas.py` · `week14/NEO4J_TUTORIAL.md` · `week14/pi-structured-extraction/`: a structured-extraction sub-project.
+
+#### 🔹 Week 15: Production GraphRAG
+Cypher + GDS, ingestion, GraphRAG across 7 frameworks, and **evaluating** it. → skills `knowledge-graph-mastery`, `agent-evaluation`
+- `week15/kg_mastery/`: the 6-part code companion (fundamentals → building → GraphRAG → evaluation/RAGAS+CI → use cases → reference) · `week15/smart_hotel_mas/`: a 5-agent CrewAI system over a 4-layer memory stack.
+
+#### 🔹 Week 16: Production Frameworks — NVIDIA NeMo Agent Toolkit
+Config-driven multi-agent: register tools, compose YAML workflows, observe. → skill `nemo-agent-toolkit`
+- `week16/adding_tools_to_agents.ipynb`: tool registration + LlamaIndex RAG tool · `week16/multi_agent_orchestration.ipynb`: supervisor → specialists with HITL.
+
+#### 🔹 Week 17: Long-Running & Distributed Agents (Google ADK + A2A)
+Agents that **pause for days and resume without losing context**, and delegate across services. → skills `long-running-and-distributed-agents`, `a2a-protocol`
+- `week17/checkpoints/checkpoint1_state_machine.py` → `checkpoint6_fleet.py`: 6 offline steps (durable state → restart-survival → webhook resume → sub-agents → A2A cards → fleet capstone) · `week17/hr_onboarding/`: a live ADK onboarding agent · `week17/authmd_adk/`: **auth.md** × ADK — store the durable grant, re-mint a scoped token at every wake.
 
 ---
 

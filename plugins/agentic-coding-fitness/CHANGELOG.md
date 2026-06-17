@@ -3,6 +3,22 @@
 All notable changes to the **Agentic Coding Fitness** plugin.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.1.0] — 2026-06-17
+
+Extends the plugin to cover the two newest course weeks (16–17), taking it from **16 → 18 skills**. The headline: agents that survive **real time** (pause for days, resume without losing context) and **service boundaries** (delegate across teams/frameworks), plus a config-driven production framework.
+
+### Added — 2 new skills
+- **nemo-agent-toolkit** (W16) — building production multi-agent systems with the **NVIDIA NeMo Agent Toolkit (NAT)**: the four building blocks (tools, agents, workflows, observability), registering custom tools via `FunctionBaseConfig` + `@register_function` → `FunctionInfo`, RAG tools via LlamaIndex, supervisor → specialist orchestration (LangGraph `StateGraph` under the hood) with HITL, YAML workflow composition that separates logic from instantiation, the `Builder`/`LLMFrameworkEnum` cross-framework abstraction, and NVIDIA NIM models. Grounded in `week16/` notebooks; ships a $0 `MockLLM` register→compose→route drill.
+- **long-running-and-distributed-agents** (W17) — agents that **pause for days and resume without losing context**: the durable state machine (`current_step` in persisted session state, never chat history), Google ADK's four primitives (`ToolContext.state`, `before_agent_callback`, `DatabaseSessionService`, `Runner.run_async(state_delta=…)`), event-driven webhook resume, pause gates, the credential problem **auth.md** solves (store the durable *grant*, re-mint a scoped short-lived token at every wake; least privilege per sub-agent; revocation), and in-process `sub_agents` vs. cross-service **A2A**. Grounded in `week17/checkpoints/` (offline), `week17/hr_onboarding/`, and `week17/authmd_adk/`; ships a $0 durable-state-machine drill you can kill and resume.
+
+### Changed
+- **a2a-protocol** — **upgraded from "conceptual" to grounded.** A2A is now runnable offline in `week17/checkpoints/checkpoint5_a2a_cards.py` (cards + six-state lifecycle) and `checkpoint6_fleet.py` (ADK long-running + A2A end-to-end); only the *remote peer* is mocked. Banner, frontmatter, and repo anchors updated; cross-linked to `long-running-and-distributed-agents`.
+- **curriculum-and-periodization** — extended the week-by-week map and the kata `SYLLABUS` to weeks 16–17; added the two new skills to the Performance phase; corrected the blueprint-vs-repo divergence note (week16 exists; the repo runs one week past the blueprint's 16 with week17's fleet/long-running capstone).
+- **multi-agent-systems** — added NeMo Agent Toolkit and Google ADK to the framework cheat-sheet, with a "beyond one process" pointer to the Week 17 fleet layer.
+
+### Versioning
+- Bumped `plugin.json` and `.claude-plugin/marketplace.json` (top-level + nested) to **2.1.0**; refreshed descriptions (16 → 18 skills, weeks 2–17) and keywords (`google-adk`, `nemo-agent-toolkit`, `authmd`, `long-running-agents`, `agent-card`, …). Skills are auto-discovered from `skills/*/SKILL.md`.
+
 ## [2.0.0] — 2026-05-31
 
 A major expansion driven by the *Agentic AI Fitness Class: Claude Code Plugin & Skill Strategy* blueprint. The plugin grows from a 9-skill course recap into a **16-skill curriculum-and-practice platform**, and every existing skill gains production-grade depth.

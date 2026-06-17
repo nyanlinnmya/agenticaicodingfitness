@@ -1,6 +1,6 @@
 ---
 name: a2a-protocol
-description: "Teach the Agent-to-Agent (A2A) protocol — the cross-framework counterpart to MCP that lets one agent discover, authenticate to, and delegate work to OTHER agents (built by other teams, on other frameworks). Covers Agent Cards at /.well-known/agent.json, the six-state task lifecycle (submitted → working → input-required → completed/failed/canceled), the three interaction patterns (polling, SSE streaming, webhooks), the A2A-vs-MCP complementary split (MCP = agent→tools, A2A = agent→agent), and the shape of an a2a-sdk agent. Use when someone asks 'how do agents on different frameworks talk to each other?', 'what's A2A / agent cards / agent.json?', 'A2A vs MCP', 'how do I split my multi-agent system across services?', or is reviewing Week 15 multi-agent / fleet-orchestration material."
+description: "Teach the Agent-to-Agent (A2A) protocol — the cross-framework counterpart to MCP that lets one agent discover, authenticate to, and delegate work to OTHER agents (built by other teams, on other frameworks). Covers Agent Cards at /.well-known/agent.json, the six-state task lifecycle (submitted → working → input-required → completed/failed/canceled), the three interaction patterns (polling, SSE streaming, webhooks), the A2A-vs-MCP complementary split (MCP = agent→tools, A2A = agent→agent), and the shape of an a2a-sdk agent. Now grounded in runnable Week 17 checkpoints (week17/checkpoints/checkpoint5_a2a_cards.py + checkpoint6_fleet.py) that walk the real card + lifecycle offline, mocking only the remote peer. Use when someone asks 'how do agents on different frameworks talk to each other?', 'what's A2A / agent cards / agent.json?', 'A2A vs MCP', 'how do I split my multi-agent system across services?', or is reviewing Week 15/17 multi-agent / fleet-orchestration material."
 when_to_use: "Learner is outgrowing a single in-process multi-agent codebase and wants agents (possibly on different frameworks/teams/services) to discover and delegate to each other, asks about A2A, Agent Cards, /.well-known/agent.json, the A2A task lifecycle, or how A2A differs from and complements MCP."
 ---
 
@@ -8,7 +8,7 @@ when_to_use: "Learner is outgrowing a single in-process multi-agent codebase and
 
 > **The one idea:** `mcp-and-skills` connected an agent to **tools**. **A2A** connects an agent to **other agents** — possibly written by another team, in another framework, running on another server. MCP is *vertical* (agent → its tools); A2A is *horizontal* (agent ↔ agent).
 
-> ⚠️ **Conceptual / stretch — this is the MAP, not runnable repo code.** A2A is **not implemented anywhere in this repo.** This skill is here for when you outgrow a single codebase. The closest *real* artifact is `week15/smart_hotel_mas` — a 5-agent system whose agents coordinate **in-process** (one Python program, one CrewAI crew). A2A is what you'd reach for to split those agents across separate services owned by separate teams. The repo's own roadmap already names it: `week15/smart_hotel_mas/INTEGRATION_ARCHITECTURE.md` puts **A2A at "L3 — Fleet Orchestration"**, the layer *above* the MCP-driven supervisory agents. Treat the code below as the shape to aim for, not something you can `python` today.
+> ✅ **Now grounded — runnable in `week17/checkpoints/`.** A2A used to be pure map; **Week 17 makes the protocol runnable offline.** `checkpoint5_a2a_cards.py` builds and validates a real Agent Card and walks the full six-state task lifecycle (including `input-required` HITL); `checkpoint6_fleet.py` is the capstone — an ADK long-running coordinator delegating across an A2A boundary, end-to-end. **What's still mocked is only the *remote peer agent*** (a `MockVendorAgent`), so you internalize the cards + lifecycle + handoff without standing up a second org's server. The real wire shape (`a2a-sdk` / `python_a2a` / ADK `RemoteA2aAgent`) is printed as guarded, illustrative code. For the long-running half of Week 17 (durable state, pause/resume, auth.md) see the **`long-running-and-distributed-agents`** skill. The original in-process baseline you're stretching is `week15/smart_hotel_mas` (5 agents, one CrewAI crew); its `INTEGRATION_ARCHITECTURE.md` puts **A2A at "L3 — Fleet Orchestration"**, the layer above the MCP-driven supervisory agents.
 
 ```
 mcp-and-skills:   agent ──MCP──▶ [ database · files · web · calendar ]      (vertical)
@@ -154,7 +154,7 @@ A2A is the **horizontal coordination**; MCP is the **vertical governance** (each
 Three responsibilities: **expose a card**, **accept a task**, **report progress**. The official SDKs (`a2a-sdk`, plus Go/JS/Java/.NET) share these concepts, so you can build polyglot systems. The shape below mirrors the research's `python_a2a` example — a Workout Coach that advertises three skills and routes incoming messages by intent.
 
 ```python
-# ⚠️ ILLUSTRATIVE — not in this repo. pip install a2a-sdk
+# ⚠️ ILLUSTRATIVE wire shape (CP5 prints a guarded version of this). pip install a2a-sdk
 from python_a2a import A2AServer, Message, TextContent, MessageRole, run_server
 
 AGENT_CARD = {                                   # 1) EXPOSE A CARD (Part A)
@@ -193,8 +193,9 @@ if __name__ == "__main__":
 
 Test it the way a *calling* agent would: `GET http://localhost:5001/.well-known/agent.json` **first** (read the card, verify auth & skills), *then* send a task message. Higher-level wrappers (Google ADK's `RemoteA2aAgent`) let you compose a remote agent so delegating across the network feels like calling a local function — discover endpoint → negotiate capability → submit task → handle the lifecycle, never knowing the other side's framework.
 
-> 📁 Closest repo anchor: `week15/smart_hotel_mas/INTEGRATION_ARCHITECTURE.md` — its three-layer model puts **A2A at "L3 — Fleet Orchestration (portfolio)"**, above MCP-driven L2 supervisory agents. The mapping is exactly this skill: MCP for an agent's tools, A2A to coordinate agents across a fleet.
-> 📁 Today's in-process baseline: `week15/smart_hotel_mas/README.md` — the 5 agents (Sensor/Energy/Memory/Alert/Report) run as **one CrewAI crew in one process**. That's `multi-agent-systems`. A2A is what you'd reach for to split them across services.
+> 📁 **Runnable now:** `week17/checkpoints/checkpoint5_a2a_cards.py` — builds + validates a real Agent Card and walks the six-state lifecycle (`MockVendorAgent` + `orchestrator_delegate`), offline. `checkpoint6_fleet.py` — the capstone: ADK long-running coordinator + A2A delegation end-to-end. `week17/REFERENCE.md` — the A2A card spec, lifecycle, and A2A-vs-MCP table.
+> 📁 Roadmap anchor: `week15/smart_hotel_mas/INTEGRATION_ARCHITECTURE.md` — its three-layer model puts **A2A at "L3 — Fleet Orchestration (portfolio)"**, above MCP-driven L2 supervisory agents.
+> 📁 In-process baseline: `week15/smart_hotel_mas/README.md` — the 5 agents (Sensor/Energy/Memory/Alert/Report) run as **one CrewAI crew in one process**. That's `multi-agent-systems`. A2A is what you reach for to split them across services.
 
 **Where this fits:** you've gone single-agent (`agent-loops`) → tools (`tool-use`, `mcp-and-skills`) → a team in one process (`multi-agent-systems`) → and A2A is the next rung *only when that team must span services or organizations.* Don't climb it early.
 
