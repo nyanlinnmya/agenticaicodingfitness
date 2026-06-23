@@ -13,8 +13,13 @@ research_report.md
 week17/week17_sessions.db
 week17/hr_onboarding/onboarding_sessions.db
 
+# Week 18 self-evolving agent runtime state (generated at runtime)
+week18/self_evolving_agent/memory/agent_state.db
+
 # Week 9 / Week 11 MAS exercise runtime outputs (LLM-generated, non-deterministic)
 ex*_output.md
 ex*_output.json
 ex*_brief_output.md
 ex*_audit_output.*
+
+altoplayground/
