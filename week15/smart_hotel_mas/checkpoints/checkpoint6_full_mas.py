@@ -21,6 +21,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # import config.py
+sys.path.insert(0, str(Path(__file__).resolve().parent))      # sibling checkpoints (checkpoint3_semantic)
 from config import check_neo4j, get_driver, MODEL
 
 
@@ -159,6 +160,18 @@ def build_crew():
     # Shared L4 memory: every tool writes to / reads from the same KG.
     kg_mem = HotelKGMemory("HotelMAS")
 
+    # Shared L3 semantic memory: readings are embedded here so agents can recall
+    # past events by *meaning* (e.g. "rooms that felt like an HVAC failure"),
+    # which Cypher can't express. Degrade gracefully if ChromaDB is unreachable.
+    try:
+        from checkpoint3_semantic import SemanticMemory
+
+        sem_mem = SemanticMemory()
+    except Exception as e:  # noqa: BLE001
+        print(f"(L3 semantic memory unavailable — {type(e).__name__}: {e}; "
+              "crew will run without semantic recall)")
+        sem_mem = None
+
     class SensorReadTool(BaseTool):
         name: str = "read_sensors"
         description: str = "Read current sensor values for a comma-separated list of room ids."
@@ -167,12 +180,21 @@ def build_crew():
             rooms = [r.strip() for r in room_ids.split(",") if r.strip()]
             out = {}
             for rid in rooms:
-                out[rid] = {
+                reading = {
                     "temp_c": round(20 + gauss(4, 2), 1),
                     "humidity": round(50 + gauss(5, 3), 1),
                     "kwh": round(1.5 + random.random() * 2, 2),
                     "occupancy": random.random() > 0.4,
                 }
+                out[rid] = reading
+                # L3: remember this reading by meaning so any agent can recall it
+                # later via semantic search. Flag hot rooms as anomalies.
+                if sem_mem is not None:
+                    anomaly = reading["temp_c"] > 26.0
+                    sem_mem.store_reading(
+                        rid, reading,
+                        "HIGH_TEMP_ALERT" if anomaly else "sensor_reading",
+                    )
             return json.dumps(out)
 
     class OptimizeTool(BaseTool):
@@ -210,9 +232,29 @@ def build_crew():
                 rows = kg_mem.recall_recent(limit=10)
             return json.dumps(rows, default=str)[:500]
 
+    class SemanticRecallTool(BaseTool):
+        name: str = "recall_similar_events"
+        description: str = (
+            "Recall past hotel events by MEANING, not exact keys (L3 semantic "
+            "memory). Pass a natural-language description like 'rooms that "
+            "overheated' or 'possible HVAC failure'; returns the most "
+            "semantically similar past sensor readings/alerts with a similarity "
+            "score. Use this to find events that 'feel like' a situation."
+        )
+
+        def _run(self, query: str) -> str:
+            if sem_mem is None:
+                return json.dumps({"error": "semantic memory (L3) not available"})
+            hits = sem_mem.recall_similar(query, n_results=5)
+            return json.dumps(
+                [{"similarity": h["similarity"], "event": h["text"]} for h in hits],
+                default=str,
+            )[:600]
+
     sensor_tool = SensorReadTool()
     optimize_tool = OptimizeTool()
     graphrag_tool = GraphRAGTool()
+    semantic_tool = SemanticRecallTool()
 
     llm = f"anthropic/{MODEL}"
 
@@ -234,17 +276,22 @@ def build_crew():
     )
     memory_agent = Agent(
         role="Hotel Memory Manager",
-        goal="Query the knowledge graph to recall what the hotel agents have done recently.",
-        backstory="You are the institutional memory, answering questions from the graph.",
-        tools=[graphrag_tool],
+        goal="Recall what the hotel agents have done recently — from the graph "
+             "(structured) and from semantic memory (by meaning).",
+        backstory="You are the institutional memory. You answer structured "
+                  "questions from the graph and fuzzy ones from semantic recall.",
+        tools=[graphrag_tool, semantic_tool],
         llm=llm,
         verbose=False,
     )
     alert_agent = Agent(
         role="Hotel Alert Coordinator",
-        goal="Surface and prioritise active alerts across the building.",
-        backstory="You triage anomalies and make sure nothing urgent is missed.",
-        tools=[graphrag_tool],
+        goal="Surface and prioritise active alerts, and find past events that "
+             "resemble the current anomalies.",
+        backstory="You triage anomalies and make sure nothing urgent is missed. "
+                  "You use semantic recall to spot situations that 'feel like' "
+                  "past failures.",
+        tools=[graphrag_tool, semantic_tool],
         llm=llm,
         verbose=False,
     )
@@ -268,8 +315,11 @@ def build_crew():
         agent=energy_agent,
     )
     t3 = Task(
-        description="Query the knowledge graph for active alerts and recent HVAC optimizations.",
-        expected_output="A short summary of alerts and optimization events from the graph.",
+        description="Query the knowledge graph for active alerts and recent HVAC "
+                    "optimizations, THEN use recall_similar_events to find past "
+                    "readings that resemble 'room overheating / HVAC failure'.",
+        expected_output="A short summary combining graph alerts/optimizations with "
+                        "the most semantically similar past events.",
         agent=memory_agent,
     )
     t4 = Task(

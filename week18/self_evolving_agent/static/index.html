@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Self-Evolving Agent — live visualizer</title>
+<style>
+  :root{
+    --bg:#0e1117; --panel:#161b22; --panel2:#1c2330; --line:#2b3440;
+    --txt:#e6edf3; --dim:#8b949e; --accent:#58a6ff; --green:#3fb950;
+    --amber:#d29922; --red:#f85149; --violet:#bc8cff; --term:#0a0d12;
+    --epi:#58a6ff; --sem:#3fb950; --pro:#bc8cff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       background:var(--bg);color:var(--txt)}
+  header{display:flex;align-items:center;gap:14px;padding:13px 22px;border-bottom:1px solid var(--line);
+         background:var(--panel);flex-wrap:wrap}
+  header h1{font-size:16px;margin:0;font-weight:650}
+  header .sub{color:var(--dim);font-size:12px}
+  .pill{font-size:11px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--dim);
+        display:inline-flex;align-items:center;gap:6px}
+  .pill .dot{width:8px;height:8px;border-radius:50%;background:var(--dim)}
+  .pill.up .dot{background:var(--green)} .pill.down .dot{background:var(--red)}
+  .pill.live{border-color:var(--green);color:var(--green)}
+  .pill.sim{border-color:var(--amber);color:var(--amber)}
+  .wrap{display:grid;grid-template-columns:1fr 400px;gap:18px;padding:18px 22px;max-width:1400px;margin:0 auto}
+  @media(max-width:1040px){.wrap{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:18px}
+  .panel h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin:0 0 12px;font-weight:600;
+            display:flex;align-items:center;gap:8px}
+  .tag{font-size:10px;padding:1px 7px;border-radius:6px;font-weight:600}
+  .tag.epi{background:rgba(88,166,255,.16);color:var(--epi)}
+  .tag.sem{background:rgba(63,185,80,.16);color:var(--sem)}
+  .tag.pro{background:rgba(188,140,255,.16);color:var(--pro)}
+  .muted{color:var(--dim);text-transform:none;letter-spacing:0;font-weight:400;font-size:11px}
+  /* compound-returns chart */
+  .chart{display:flex;align-items:flex-end;gap:12px;height:160px;padding:6px 2px 0}
+  .bar{flex:1;min-width:46px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+  .bar .col{width:100%;max-width:64px;border-radius:7px 7px 0 0;background:linear-gradient(180deg,var(--epi),#2a6fc0);
+            transition:height .5s ease;display:flex;align-items:flex-start;justify-content:center;color:#fff;
+            font-weight:700;font-size:13px;padding-top:4px;min-height:22px}
+  .bar.best .col{background:linear-gradient(180deg,var(--green),#2a8c3c)}
+  .bar .lab{font-size:11px;color:var(--dim);margin-top:6px;text-align:center}
+  .bar .lab b{color:var(--txt);display:block}
+  .empty{color:#586069;font-size:12px;padding:8px 0}
+  /* memory files */
+  pre{background:var(--term);border:1px solid var(--line);border-radius:8px;padding:11px 13px;margin:0;
+      font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:#c9d6e3;
+      white-space:pre-wrap;word-break:break-word;max-height:220px;overflow:auto}
+  .mdgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:680px){.mdgrid{grid-template-columns:1fr}}
+  .filelbl{font-size:11px;color:var(--dim);margin:0 0 5px;font-family:ui-monospace,monospace}
+  /* skills */
+  .skill{border:1px solid var(--line);border-radius:10px;padding:11px 13px;background:var(--panel2);margin-bottom:10px}
+  .skill .name{font-weight:650;color:var(--pro);font-family:ui-monospace,monospace;font-size:13px}
+  .skill .met{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--dim);margin-top:6px}
+  .skill .met b{color:var(--txt)}
+  /* drive panel */
+  textarea{width:100%;background:var(--term);color:var(--txt);border:1px solid var(--line);border-radius:8px;
+           padding:10px 12px;font:13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;resize:vertical;min-height:62px}
+  .preview{border:1px dashed var(--line);border-radius:8px;padding:10px 12px;margin:11px 0;font-size:12px;background:rgba(88,166,255,.04)}
+  .preview .row{display:flex;gap:8px;align-items:center;margin:3px 0}
+  .chip{font-size:10.5px;padding:1px 7px;border-radius:6px;background:rgba(188,140,255,.16);color:var(--pro);font-family:ui-monospace,monospace}
+  .chip.none{background:var(--panel2);color:var(--dim)}
+  .chip.yes{background:rgba(63,185,80,.16);color:var(--green)}
+  .chip.no{background:var(--panel2);color:var(--dim)}
+  .btns{display:flex;flex-direction:column;gap:9px;margin-top:6px}
+  button{font:inherit;font-weight:600;padding:11px 14px;border-radius:9px;cursor:pointer;border:1px solid var(--line);
+         background:var(--panel2);color:var(--txt);text-align:left;transition:all .15s}
+  button .hint{display:block;font-weight:400;font-size:11px;color:var(--dim);margin-top:2px}
+  button:hover:not(:disabled){border-color:var(--accent)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  button.primary{background:rgba(88,166,255,.14);border-color:var(--accent)}
+  button.evolve{background:rgba(188,140,255,.14);border-color:var(--violet)}
+  button.warn{background:rgba(248,81,73,.10);border-color:var(--red)}
+  .status-line{font-size:12px;color:var(--dim);margin-top:11px;min-height:18px}
+  .spin{display:inline-block;width:12px;height:12px;border:2px solid var(--line);border-top-color:var(--accent);
+        border-radius:50%;animation:rot .7s linear infinite;vertical-align:-2px}
+  @keyframes rot{to{transform:rotate(360deg)}}
+  /* loop diagram */
+  .loop{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11px;justify-content:center;margin-top:4px}
+  .loop .n{padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);text-align:center}
+  .loop .n b{display:block;font-size:11px}
+  .loop .n.epi{border-color:var(--epi)} .loop .n.sem{border-color:var(--sem)} .loop .n.pro{border-color:var(--pro)}
+  .loop .a{color:var(--dim)}
+  /* log */
+  .log{max-height:300px;overflow:auto;font-size:12.5px}
+  .ev{display:flex;gap:9px;padding:7px 0;border-bottom:1px solid var(--line)}
+  .ev:last-child{border-bottom:0}
+  .ev .t{color:var(--dim);flex:0 0 54px;font-family:ui-monospace,monospace;font-size:11px}
+  .ev.run .msg{color:var(--epi)} .ev.eviction .msg{color:var(--dim)}
+  .ev.learn .msg{color:var(--violet)} .ev.win .msg{color:var(--green)} .ev.sys .msg{color:var(--dim)}
+  .ev .msg{white-space:pre-wrap}
+</style>
+</head>
+<body>
+<header>
+  <h1>🧠 Self-Evolving Agent</h1>
+  <span class="sub">tripartite memory · closed learning loop · compound returns</span>
+  <span style="flex:1"></span>
+  <span class="pill" id="modePill">mode …</span>
+  <span class="pill" id="health"><span class="dot"></span>service :8088</span>
+</header>
+
+<div class="wrap">
+  <!-- LEFT: the three memory layers + compound returns -->
+  <div>
+    <div class="panel">
+      <h2><span class="tag epi">EPISODIC</span> Compound returns — turns per run
+        <span class="muted">SessionDB · lower = the agent is reusing what it learned</span></h2>
+      <div class="chart" id="chart"><div class="empty">No runs yet — drive the agent on the right →</div></div>
+    </div>
+
+    <div class="panel">
+      <h2><span class="tag sem">SEMANTIC</span> MEMORY.md &amp; USER.md
+        <span class="muted">distilled facts the consolidator wrote</span></h2>
+      <div class="mdgrid">
+        <div><div class="filelbl">memory/MEMORY.md</div><pre id="memoryMd">—</pre></div>
+        <div><div class="filelbl">memory/USER.md</div><pre id="userMd">—</pre></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2><span class="tag pro">PROCEDURAL</span> SKILL.md library
+        <span class="muted">auto-generated playbooks — this is what makes repeat tasks fast</span></h2>
+      <div id="skills"><div class="empty">No skills learned yet.</div></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: drive + explain -->
+  <div>
+    <div class="panel">
+      <h2>Drive the agent</h2>
+      <textarea id="prompt">Find and fix the bug in service.py that crashes on data.csv</textarea>
+      <div class="preview" id="preview">
+        <div class="row">memory that will be injected:</div>
+        <div class="row">semantic <span class="chip no" id="pvSem">none</span>
+          · skills <span class="chip none" id="pvSkills">none matched</span></div>
+        <div class="row muted" id="pvSize"></div>
+      </div>
+      <div class="btns">
+        <button class="primary" id="bRun" onclick="runTask()">▶ Run the task
+          <span class="hint">injects memory · logs the conversation to episodic SessionDB</span></button>
+        <button class="evolve" id="bCon" onclick="consolidate()" disabled>🧠 Consolidate (the subconscious loop)
+          <span class="hint">distil the last run → semantic facts + a SKILL.md</span></button>
+        <button class="warn" onclick="resetAll()">↺ Reset to amnesiac slate
+          <span class="hint">wipe memory — re-watch it learn from zero</span></button>
+      </div>
+      <div class="status-line" id="status">Tip: Run → Consolidate → Run the SAME task again. Watch the turns drop.</div>
+    </div>
+
+    <div class="panel">
+      <h2>The closed learning loop</h2>
+      <div class="loop">
+        <div class="n epi"><b>① RUN</b>episodic log</div><span class="a">→</span>
+        <div class="n pro"><b>② CONSOLIDATE</b>extract skill</div><span class="a">→</span>
+        <div class="n sem"><b>semantic + procedural</b>persisted</div><span class="a">↺</span>
+        <div class="n epi"><b>③ next run</b>starts smarter</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Event timeline <span class="muted">runs (blue) · learning (purple)</span></h2>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let STATE=null, busy=false, lastSession=null, runCount=0;
+
+async function api(path,{method="GET",body=null}={}){
+  const opt={method,headers:{}}; if(body){opt.headers["Content-Type"]="application/json";opt.body=JSON.stringify(body);}
+  const r=await fetch(path,opt); if(!r.ok)throw new Error(`${r.status} ${await r.text()}`); return r.json();
+}
+function esc(s){return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+function setBusy(on,msg){ busy=on;
+  document.querySelectorAll("button").forEach(b=>b.disabled=on);
+  document.getElementById("status").innerHTML = on?`<span class="spin"></span> ${msg||"working…"}`:(msg||"");
+  if(!on) refreshButtons();
+}
+function refreshButtons(){
+  document.getElementById("bRun").disabled=busy;
+  document.getElementById("bCon").disabled=busy||!lastSession;
+}
+
+function log(msg,kind="sys"){ const el=document.getElementById("log");
+  const now=new Date().toLocaleTimeString("en-GB"); const d=document.createElement("div");
+  d.className="ev "+kind; d.innerHTML=`<span class="t">${now}</span><span class="msg">${msg}</span>`;
+  el.appendChild(d); el.scrollTop=el.scrollHeight;
+}
+
+function renderChart(){
+  const runs=STATE?.runs||[]; const el=document.getElementById("chart");
+  if(!runs.length){ el.innerHTML='<div class="empty">No runs yet — drive the agent on the right →</div>'; return; }
+  const maxT=Math.max(...runs.map(r=>r.turns||1),1);
+  const minT=Math.min(...runs.map(r=>r.turns||0).filter(t=>t>0));
+  el.innerHTML=runs.map(r=>{
+    const t=r.turns||0, h=Math.round(18+82*(t/maxT));
+    const best=t>0&&t===minT&&runs.length>1;
+    return `<div class="bar ${best?'best':''}"><div class="col" style="height:${h}%">${t}</div>
+      <div class="lab"><b>${esc(r.label)}</b>$${(r.cost||0).toFixed(3)}<br>
+      ${r.skills_loaded.length?'🧩 '+esc(r.skills_loaded.join(',')):'cold'}</div></div>`;
+  }).join("");
+}
+function renderMemory(){
+  document.getElementById("memoryMd").textContent=STATE?.semantic?.memory_md||"—";
+  document.getElementById("userMd").textContent=STATE?.semantic?.user_md||"—";
+}
+function renderSkills(){
+  const sk=STATE?.skills||[]; const el=document.getElementById("skills");
+  if(!sk.length){ el.innerHTML='<div class="empty">No skills learned yet — run a task, then consolidate.</div>'; return; }
+  el.innerHTML=sk.map(s=>`<div class="skill"><div class="name">${esc(s.name)}.md</div>
+    <div class="met"><span>v<b>${s.version??'?'}</b></span>
+      <span>success <b>${s.success_rate??'?'}</b></span>
+      <span>avg_turns <b>${s.avg_turns??'?'}</b></span>
+      <span>usage <b>${s.usage_count??'?'}</b></span>
+      <span>pitfalls <b>${s.pitfall_count??0}</b></span></div></div>`).join("");
+}
+function render(){ renderChart(); renderMemory(); renderSkills();
+  const m=STATE?.mode; const p=document.getElementById("modePill");
+  p.className="pill "+(m==="live"?"live":"sim");
+  p.textContent=(m==="live"?"● LIVE — real LLM":"● SIMULATED — offline")+" · "+(STATE?.model||"");
+}
+
+let pvTimer=null;
+function schedulePreview(){ clearTimeout(pvTimer); pvTimer=setTimeout(preview,350); }
+async function preview(){
+  const prompt=document.getElementById("prompt").value;
+  try{ const r=await api("/api/preview?prompt="+encodeURIComponent(prompt));
+    const sem=document.getElementById("pvSem");
+    sem.textContent=r.has_semantic?"loaded":"none"; sem.className="chip "+(r.has_semantic?"yes":"no");
+    const sk=document.getElementById("pvSkills");
+    if(r.skills_loaded.length){ sk.textContent=r.skills_loaded.join(", "); sk.className="chip"; }
+    else { sk.textContent="none matched"; sk.className="chip none"; }
+    document.getElementById("pvSize").textContent=
+      `system prompt: ${r.system_prompt_chars} chars · ${r.skill_count} skill(s) in library`;
+  }catch(e){}
+}
+
+async function runTask(){
+  const prompt=document.getElementById("prompt").value.trim(); if(!prompt)return;
+  runCount=(STATE?.runs?.length||0)+1;
+  setBusy(true, STATE?.mode==="live"?"running real LLM agent turn…":"running agent turn…");
+  log(`▶ run ${runCount}: "${esc(prompt.slice(0,60))}…"`,"run");
+  try{ const r=await api("/api/run",{method:"POST",body:{prompt,label:"run "+runCount}});
+    STATE=r.state; lastSession=r.session_id;
+    const sk=r.skills_loaded.length?`loaded skill ${r.skills_loaded.join(",")}`:"no skill matched (cold start)";
+    log(`   ${r.mode} · ${r.turns} turns · $${r.cost.toFixed(4)} · ${sk}`,"run");
+    log(`   → ${esc((r.result||"").slice(0,90))}`,"sys");
+    render();
+    setBusy(false, "Now click 🧠 Consolidate to let the agent learn from this run.");
+  }catch(e){ log("⚠ "+e.message,"sys"); setBusy(false); }
+}
+
+async function consolidate(){
+  if(!lastSession)return;
+  setBusy(true,"subconscious loop: distilling the run into memory…");
+  log("🧠 consolidating last run (episodic → semantic + procedural)…","learn");
+  try{ const r=await api("/api/consolidate",{method:"POST",body:{session_id:lastSession}});
+    STATE=r.state; const L=r.learned||{};
+    if((L.facts||[]).length) log("   + semantic facts: "+L.facts.join("; "),"learn");
+    if(L.skill) log(`   + procedural skill: ${L.skill.skill||L.skill} (v${L.skill.new_version??''})`,"win");
+    if(L.files_changed) log("   + files written: "+L.files_changed.join(", "),"learn");
+    if(!((L.facts||[]).length||L.skill||(L.files_changed||[]).length))
+      log("   (nothing worth persisting from this run)","sys");
+    lastSession=null; render();
+    setBusy(false,"Learned. Now run the SAME task again — watch it use the new skill and finish faster.");
+  }catch(e){ log("⚠ "+e.message,"sys"); setBusy(false); }
+}
+
+async function resetAll(){
+  if(!confirm("Wipe all learned memory (MEMORY.md, USER.md, skills, episodic DB)?"))return;
+  setBusy(true,"wiping memory…");
+  try{ const r=await api("/api/reset",{method:"POST"}); STATE=r.state; lastSession=null;
+    document.getElementById("log").innerHTML=""; log("↺ reset — agent is amnesiac again","sys");
+    render(); setBusy(false,"Clean slate. Run the task to watch it learn from zero.");
+  }catch(e){ setBusy(false); }
+}
+
+async function refresh(){ try{ STATE=await api("/api/state"); render(); }catch(e){} }
+async function health(){ const p=document.getElementById("health");
+  try{ await api("/healthz"); p.classList.add("up"); p.classList.remove("down"); }
+  catch{ p.classList.remove("up"); p.classList.add("down"); } }
+
+document.getElementById("prompt").addEventListener("input",schedulePreview);
+(async()=>{ await refresh(); await preview(); health(); setInterval(health,5000);
+  log("ready — Run the task, Consolidate, then Run it again.","sys"); })();
+</script>
+</body>
+</html>

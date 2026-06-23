@@ -1,0 +1,12 @@
+# Week 18 — Agent Loop tutorial (Claude Agent SDK)
+#
+# The demos make REAL calls through the Claude Agent SDK, which drives the local
+# `claude` CLI. Install the CLI separately and sign in (no API key needed):
+#     npm install -g @anthropic-ai/claude-code   # then run `claude` once to sign in
+
+claude-agent-sdk>=0.1.50   # the agent loop, tools, hooks, subagents, sessions
+
+# the interactive tutorial web app (tutorial_server.py)
+fastapi>=0.110
+uvicorn>=0.29
+pydantic>=2.0
