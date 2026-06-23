@@ -1,0 +1,14 @@
+# Week 18 — Sovereign AI at the Edge (interactive tutorial + real local demos)
+#
+# Install into the repo's uv-managed .venv (Python 3.13):
+#     uv pip install -r week18/sovereign_ai_edge/requirements.txt
+#
+# The demos call a LOCAL OpenAI-compatible endpoint (Ollama by default) — no
+# cloud API key, no cloud cost. You also need a local model server running:
+#     curl -fsSL https://ollama.com/install.sh | sh
+#     ollama run gemma4:12b      # Mac / DGX Spark / Ubuntu GPU
+#     ollama run gemma4:2b       # Raspberry Pi / low-RAM
+
+openai>=1.40          # drop-in client, pointed at the local base_url
+fastapi>=0.110        # the tutorial web app's control plane
+uvicorn>=0.29         # ASGI server for the web app
