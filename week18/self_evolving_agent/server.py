@@ -50,12 +50,30 @@ STATIC_DIR = Path(__file__).resolve().parent / "static"
 _lock = threading.Lock()                 # serialise agent access (one SQLite conn)
 _agent: SelfEvolvingAgent | None = None
 
+# Mode: 'auto' (live if the claude CLI is available), 'live', or 'sim'.
+# Live = real LLM agent turns + real meta-cognitive consolidation (authentic, but
+# real-model turn counts vary). Sim = deterministic offline turns that cleanly
+# demonstrate the guaranteed compound-returns curve. Toggle it live in the UI.
+_mode = os.environ.get("SELF_EVOLVING_MODE", "auto").lower()
+
 
 def agent() -> SelfEvolvingAgent:
     global _agent
     if _agent is None:
         _agent = SelfEvolvingAgent()
+    _apply_mode()
     return _agent
+
+
+def _apply_mode() -> None:
+    if _agent is None:
+        return
+    if _mode == "sim":
+        _agent.live = False
+    elif _mode == "live":
+        _agent.live = config.sdk_available()
+    else:                                # auto
+        _agent.live = config.sdk_available()
 
 
 app = FastAPI(title="Self-Evolving Agent — live visualizer")
@@ -83,12 +101,18 @@ class ConsolidateReq(BaseModel):
     session_id: str
 
 
+class ModeReq(BaseModel):
+    mode: str                            # 'live' | 'sim' | 'auto'
+
+
 # ── state snapshot ────────────────────────────────────────────────────────────
 def _snapshot() -> dict:
     a = agent()
     runs = a.db.list_sessions()
     return {
         "mode": "live" if a.live else "simulated",
+        "mode_setting": _mode,
+        "live_available": config.sdk_available(),
         "model": a.model,
         "runs": [{"label": r["label"], "turns": r["turns"] or 0,
                   "cost": round(r["cost"] or 0, 4),
@@ -135,6 +159,16 @@ def consolidate(req: ConsolidateReq) -> dict:
         a = agent()
         learned = a.consolidate(req.session_id)
         return {"learned": learned, "state": _snapshot()}
+
+
+@app.post("/api/mode")
+def set_mode(req: ModeReq) -> dict:
+    global _mode
+    with _lock:
+        if req.mode in ("live", "sim", "auto"):
+            _mode = req.mode
+        _apply_mode()
+        return _snapshot()
 
 
 @app.post("/api/reset")

@@ -23,7 +23,6 @@ learned so the visualizer can show the episodic→semantic→procedural flow.
 """
 from __future__ import annotations
 
-import asyncio
 import json
 import re
 from datetime import datetime, timezone
@@ -162,12 +161,15 @@ class SDKConsolidator:
         self.budget_usd = budget_usd
 
     def consolidate(self, history: list[dict], session_id: str) -> dict:
-        return asyncio.run(self._run(history, session_id))
+        from ._aio import run_sync
+        return run_sync(self._run, history, session_id)
 
     async def _run(self, history: list[dict], session_id: str) -> dict:
         from claude_agent_sdk import ClaudeAgentOptions, ResultMessage, query
         transcript = _format_transcript(history)
         before = self._snapshot_files()
+        # Consume the generator fully (no early break) so the SDK's anyio task
+        # group shuts down cleanly in this thread.
         async for msg in query(
             prompt=("Review this conversation and update memory + skills as "
                     f"appropriate. Work in the current directory.\n\n{transcript}"),
@@ -182,7 +184,7 @@ class SDKConsolidator:
             ),
         ):
             if isinstance(msg, ResultMessage):
-                break
+                pass
         after = self._snapshot_files()
         return self._diff(before, after)
 

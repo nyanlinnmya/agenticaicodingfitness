@@ -1,0 +1,5 @@
+# Generated agent memory — wiped by "Reset" / "Start over".
+memory/
+.logs/
+__pycache__/
+*.pyc

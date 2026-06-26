@@ -123,6 +123,26 @@ class SkillLibrary:
         index[skill_name] = {"file_path": str(file_path), "keywords": keywords}
         self.index_path.write_text(json.dumps(index, indent=2))
 
+    def reindex(self) -> int:
+        """Ensure every skills/*.md has an index entry — derive keywords from the
+        skill name and its text. Needed because the LIVE meta-cognitive agent
+        writes SKILL.md files directly and won't touch index.json itself."""
+        index = json.loads(self.index_path.read_text()) if self.index_path.exists() else {}
+        added = 0
+        for p in self.dir.glob("*.md"):
+            name = p.stem
+            if name in index:
+                continue
+            text = p.read_text(errors="replace").lower()
+            name_words = set(re.findall(r"\w+", name.replace("-", " ")))
+            body_words = {w for w in re.findall(r"\w+", text[:600]) if len(w) > 4}
+            index[name] = {"file_path": f"{name}.md",
+                           "keywords": sorted(name_words | body_words)[:14]}
+            added += 1
+        if added:
+            self.index_path.write_text(json.dumps(index, indent=2))
+        return added
+
     # ── 7.2 SKILL.md versioning — archive + rollback ─────────────────────────
     def update_skill_with_versioning(self, skill_name: str, new_content: str) -> dict:
         """Update a SKILL.md, archiving the previous version first. Never blindly
