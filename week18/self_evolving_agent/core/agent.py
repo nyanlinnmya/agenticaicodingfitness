@@ -22,11 +22,11 @@ The visualizer and checkpoints call: run_task() then consolidate().
 """
 from __future__ import annotations
 
-import asyncio
 import uuid
 from pathlib import Path
 
 from .. import config
+from ._aio import run_sync
 from .consolidation import HeuristicConsolidator, SDKConsolidator
 from .semantic_memory import SemanticMemory
 from .session_db import SessionDB
@@ -94,7 +94,7 @@ class SelfEvolvingAgent:
         skills_loaded = self.skills.matching_skill_names(prompt)
 
         if self.live:
-            outcome = asyncio.run(self._run_live(session_id, prompt, system_prompt))
+            outcome = run_sync(self._run_live, session_id, prompt, system_prompt)
         else:
             outcome = self._run_simulated(session_id, prompt, bool(skills_loaded))
 
@@ -181,18 +181,30 @@ class SelfEvolvingAgent:
         production this is the Stop hook firing in a background thread; here we
         call it explicitly so the visualizer can show what was learned."""
         history = self.db.get_session_history(session_id)
-        if self.live:
-            try:
-                learned = SDKConsolidator(self.mem_dir, config.MODEL_SMART,
-                                          config.CONSOLIDATION_BUDGET_USD
-                                          ).consolidate(history, session_id)
-            except Exception as exc:                       # fall back, never crash a run
-                learned = HeuristicConsolidator(self.mem_dir, self.skills.dir
-                                                ).consolidate(history, session_id)
-                learned["note"] = f"SDK consolidation failed ({exc}); used heuristic"
-        else:
-            learned = HeuristicConsolidator(self.mem_dir, self.skills.dir
-                                            ).consolidate(history, session_id)
+        heuristic = HeuristicConsolidator(self.mem_dir, self.skills.dir)
+        if not self.live:
+            return heuristic.consolidate(history, session_id)
+
+        # LIVE: let the real meta-cognitive agent distil the run by editing the
+        # memory files itself. It is stochastic — it may judge a trivial run not
+        # worth saving — so if it wrote nothing we run the deterministic heuristic
+        # to guarantee the learning loop is always observable.
+        try:
+            learned = SDKConsolidator(self.mem_dir, config.MODEL_SMART,
+                                      config.CONSOLIDATION_BUDGET_USD
+                                      ).consolidate(history, session_id)
+        except Exception as exc:                           # never crash a run
+            learned = {"facts": [], "skill": None, "files_changed": [],
+                       "note": f"SDK consolidation error: {exc}"}
+        wrote_nothing = not (learned.get("files_changed") or learned.get("skill"))
+        if wrote_nothing:
+            fallback = heuristic.consolidate(history, session_id)
+            if fallback.get("skill") or fallback.get("facts"):
+                fallback["note"] = "LLM pass found nothing reusable; heuristic distilled it"
+                learned = fallback
+        # The LIVE agent writes SKILL.md files directly — make sure they're indexed
+        # so the NEXT run can actually match and load them.
+        self.skills.reindex()
         return learned
 
     def close(self) -> None:

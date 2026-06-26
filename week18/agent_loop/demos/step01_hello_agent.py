@@ -34,7 +34,7 @@ async def main() -> None:
 
     await run_loop(
         prompt="What files are in the current directory? List them, then tell me "
-        "which is the largest. Keep it brief.",
+        "Count word print inside those files, find the file with highest number of the word print",
         options=ClaudeAgentOptions(
             allowed_tools=["Bash", "Glob"],
             permission_mode="bypassPermissions",  # auto-approve in this sandbox demo
