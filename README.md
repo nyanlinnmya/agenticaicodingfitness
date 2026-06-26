@@ -15,7 +15,7 @@ We emphasize a **practice-first** approach (Vibe Coding). No long lectures, just
 
 ## 📚 Catching up? Install the Bootcamp Plugin
 
-Missed a session or want to review at your own pace? We packaged the **entire course (weeks 2–17)** into a shareable **Claude Code plugin** — **18 bite-sized skills** (one per concept) that teach the idea, show runnable code (pointing at the real `weekN/` files here), and walk you through a hands-on **$0 lab** (a tiny `MockLLM` so you need no API key to start). Just ask Claude in plain English and the right skill loads automatically.
+Missed a session or want to review at your own pace? We packaged the **entire course (weeks 2–18)** into a shareable **Claude Code plugin** — **20 bite-sized skills** (one per concept) that teach the idea, show runnable code (pointing at the real `weekN/` files here), and walk you through a hands-on **$0 lab** (a tiny `MockLLM`, or fully offline checkpoints, so you need no API key to start). Just ask Claude in plain English and the right skill loads automatically.
 
 **Install** (run these in any Claude Code session):
 
@@ -28,7 +28,7 @@ Then try: *"Recap the whole course and tell me which skill to start with."*
 
 ### 🔄 Already installed? Pull the latest version mid-session
 
-We ship new skills as the course grows (we're on **v2.1.0 — 18 skills**). To grab the newest version **without restarting**, run these three in your current session:
+We ship new skills as the course grows (we're on **v2.2.0 — 20 skills**). To grab the newest version **without restarting**, run these three in your current session:
 
 ```
 /plugin marketplace update agentic-coding-fitness                 # 1. refresh the catalog from GitHub
@@ -40,11 +40,11 @@ We ship new skills as the course grows (we're on **v2.1.0 — 18 skills**). To g
 
 **Prefer clicking?** Run `/plugin` for the interactive manager: **Marketplaces** tab → select *agentic-coding-fitness* → **Update**, then **Installed** tab → select the plugin → **Reinstall**, then `/reload-plugins`. (You can also toggle **Enable auto-update** on the marketplace so new versions are fetched at startup.)
 
-Covers: LLM basics · tool use · agent loops · MCP & skills · RAG · multi-agent systems · production & observability · agent evaluation/CI · knowledge-graph memory · production GraphRAG · choosing models & patterns · the NVIDIA NeMo Agent Toolkit · long-running & distributed agents (Google ADK durable sessions, pause/resume, auth.md, A2A fleets) · vibe-coding & security · the A2A protocol · skill-authoring. See [`plugins/agentic-coding-fitness/`](plugins/agentic-coding-fitness/) for details.
+Covers: LLM basics · tool use · agent loops (now incl. the Week 18 Claude Agent SDK production loop) · MCP & skills · RAG · multi-agent systems · production & observability · agent evaluation/CI · knowledge-graph memory · production GraphRAG · choosing models & patterns · the NVIDIA NeMo Agent Toolkit · long-running & distributed agents (Google ADK durable sessions, pause/resume, auth.md, A2A fleets) · self-evolving agents (tripartite memory + consolidation) · sovereign AI at the edge (local/$0 inference) · vibe-coding & security · the A2A protocol · skill-authoring. See [`plugins/agentic-coding-fitness/`](plugins/agentic-coding-fitness/) for details.
 
 ## 📂 Repository Contents 
 
-The project is structured week-by-week as our complexity scales up — from a single API call to long-running, distributed agent fleets. Each week maps to a plugin skill (above) that recaps it with a $0 lab.
+The project is structured week-by-week as our complexity scales up — from a single API call to long-running distributed fleets, self-evolving memory, and sovereign agents running entirely on hardware you own. Each week maps to a plugin skill (above) that recaps it with a $0 lab.
 
 ### Phase ① Foundation — talk → tools → agents
 
@@ -109,6 +109,15 @@ Config-driven multi-agent: register tools, compose YAML workflows, observe. → 
 #### 🔹 Week 17: Long-Running & Distributed Agents (Google ADK + A2A)
 Agents that **pause for days and resume without losing context**, and delegate across services. → skills `long-running-and-distributed-agents`, `a2a-protocol`
 - `week17/checkpoints/checkpoint1_state_machine.py` → `checkpoint6_fleet.py`: 6 offline steps (durable state → restart-survival → webhook resume → sub-agents → A2A cards → fleet capstone) · `week17/hr_onboarding/`: a live ADK onboarding agent · `week17/authmd_adk/`: **auth.md** × ADK — store the durable grant, re-mint a scoped token at every wake.
+
+### Phase ⑤ Sovereignty & Self-Improvement — the stack you own, that gets better
+
+#### 🔹 Week 18: Production Loops, Self-Evolving Memory & Sovereign Edge AI
+Three interactive web apps + runnable demos that take the agent stack to production, make it *learn*, and take it *off the cloud*. → skills `agent-loops` (extended), `self-evolving-agents`, `sovereign-ai-edge`
+- **`week18/agent_loop/`** — the loop as a *production* discipline via the **Claude Agent SDK**: built-in & custom tools, PreToolUse/PostToolUse safety hooks, resumable sessions, subagent orchestration, and `max_turns`/`max_budget_usd` caps. A clickable streaming web app (`tutorial_server.py`, port 8090) + 9 demos (`step01_hello_agent` → `step09_production`). Uses your `claude` CLI sign-in — **no API key**.
+- **`week18/self_evolving_agent/`** — turn a *stateless* agent into one that **remembers, learns, and gets cheaper** via the **Tripartite Memory Model** (episodic `SessionDB` + semantic `MEMORY.md`/`USER.md` + procedural `SKILL.md` library) and a background **consolidation** loop → compound returns (~64% fewer turns / ~66% lower cost by run 5). Live visualizer (port 8088) + step-by-step guide (port 8090); 7 checkpoints (1–6 offline, $0).
+- **`week18/sovereign_ai_edge/`** — run the **whole stack on hardware you own** with zero cloud dependency and **$0 per token**: local OpenAI-compatible inference (Ollama), RAM-based hardware sizing, quantization math, LoRA/NeMo fine-tuning, on-device tool-calling agents, a Smart-Hotel HVAC demo, and a live air-gap **sovereignty audit**. Web app on port 8091 + 9 demos.
+- Comprehensive write-ups per folder (`README.md`/`TUTORIAL.md`) plus tutorial PDFs: `agent_loop_comprehensive_tutorial.pdf`, `self_evolving_agent_tutorial.pdf`, `sovereign_ai_edge_tutorial.pdf`.
 
 ---
 
