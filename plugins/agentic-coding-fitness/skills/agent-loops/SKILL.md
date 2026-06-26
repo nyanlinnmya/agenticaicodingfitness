@@ -1,7 +1,7 @@
 ---
 name: agent-loops
-description: "Teach the core agent loop — the ReAct pattern (REASON → ACT → OBSERVE → repeat) — the thing that turns a tool-using model into an autonomous agent that pursues a goal across many steps. Covers the reusable Agent class, stop conditions, bounded execution (iteration/tool-call/cost caps), the reflection/self-critique loop, token-budget guardrails to prevent 'denial of wallet', and autonomous multi-step pipelines. Use when someone asks 'what actually IS an agent?', mentions ReAct / create_react_agent / max_iterations / agent runaway loops / token budget, wants to build an agent that works toward a goal on its own, or is reviewing Weeks 4–5."
-when_to_use: "Learner wants to build an autonomous agent that loops toward a goal, asks what distinguishes an agent from a chatbot, mentions ReAct / bounded execution / runaway cost, wants a reusable Agent framework, or is catching up on Weeks 4–5."
+description: "Teach the core agent loop — the ReAct pattern (REASON → ACT → OBSERVE → repeat) — the thing that turns a tool-using model into an autonomous agent that pursues a goal across many steps. Covers the reusable Agent class, stop conditions, bounded execution (iteration/tool-call/cost caps), the reflection/self-critique loop, token-budget guardrails to prevent 'denial of wallet', autonomous multi-step pipelines, AND (Week 18) the loop as a production engineering discipline via the Claude Agent SDK — built-in & custom tools, PreToolUse/PostToolUse safety hooks, resumable sessions, subagent orchestration, and max_turns/max_budget_usd caps, all watchable in a live web app. Use when someone asks 'what actually IS an agent?', mentions ReAct / create_react_agent / max_iterations / agent runaway loops / token budget / claude_agent_sdk / query() / agent hooks / sessions / subagents, wants to build an agent that works toward a goal on its own, or is reviewing Weeks 4–5 or Week 18."
+when_to_use: "Learner wants to build an autonomous agent that loops toward a goal, asks what distinguishes an agent from a chatbot, mentions ReAct / bounded execution / runaway cost, wants a reusable Agent framework, asks about the Claude Agent SDK loop (tools/hooks/sessions/subagents, max_turns, max_budget_usd), or is catching up on Weeks 4–5 or Week 18."
 ---
 
 # Agent Loops — From Tool Caller to Autonomous Agent (Weeks 4–5)
@@ -219,6 +219,41 @@ Two of these are exactly what you already saw in Week 11 exercises — *bounded 
   > 📁 Class repo: `week11/exercises/ex13_autonomous_research/ex13_autonomous_research.py`
 
 The deeper treatment of cost-per-task, alerting, and circuit breakers lives in `production-and-observability`; the muscle-memory reps for building these caps from scratch live in `agent-drills`.
+
+---
+
+## Week 18 — the loop as a production engineering discipline (Claude Agent SDK)
+
+Weeks 4–5 hand-rolled the loop to *understand* it. **Week 18 makes it production software** using the **Claude Agent SDK** (`claude_agent_sdk.query()`), which drives your local `claude` CLI — so it uses your existing Claude Code sign-in and needs **no `ANTHROPIC_API_KEY`**. Same REASON → ACT → OBSERVE loop, now with the five things a real deployment needs:
+
+| Production concern | Week 5 hand-rolled | Week 18 with the SDK |
+|---|---|---|
+| **Tools** | you write the schema + executor | built-in tools (Read/Write/Bash…) **plus** custom `@tool` async fns; `disallowed_tools` **always wins** |
+| **Safety** | hope the prompt behaves | **PreToolUse hooks** block dangerous calls (`rm -rf`) *before* they run; **PostToolUse** hooks audit every action |
+| **Continuity** | `messages` list lost at exit | **sessions** capture & **resume** — run 2 recalls a fact never in its prompt |
+| **Scale** | one agent, one context | **subagent orchestration** — delegate to specialists with fresh contexts, then synthesise |
+| **Bounded execution** | `max_iterations` only | `max_turns` **and** `max_budget_usd` — a real USD ceiling stops a runaway loop |
+
+The shared engine is `loopview.py`: a thin wrapper over `query()` that labels every message **REASON / ACT / OBSERVE / RESULT**, counts turns, and prints the real USD cost — so the loop is never a black box. The minimal real loop is tiny:
+
+```python
+from claude_agent_sdk import query, ClaudeAgentOptions
+
+async for msg in query(
+    prompt="List the files here, then summarise what this project does.",
+    options=ClaudeAgentOptions(
+        allowed_tools=["Read", "Glob"],     # what it MAY do
+        disallowed_tools=["Bash"],          # hard deny — always wins
+        max_turns=6,                        # bounded execution (turns)
+        # max_budget_usd=0.10,              # bounded execution (cost)
+    ),
+):
+    print(msg)        # AssistantMessage (REASON/ACT) · ToolResult (OBSERVE) · ResultMessage
+```
+
+> 📁 Class repo: `week18/agent_loop/` — a clickable, streaming web app (`tutorial_server.py` → `http://127.0.0.1:8090`) plus 9 runnable demos, one per tutorial part: `step01_hello_agent` (smallest real loop) → `step03_builtin_tools` (permissions) → `step04_custom_tool` (custom `@tool`) → `step05_hooks_safety` (PreToolUse gate denies `rm -rf`) → `step06_sessions` (resume) → `step07_multi_agent` (subagents) → `step08_usecase_triage` (clear a support queue) → `step09_production` (`max_budget_usd` stops a runaway). Full write-up: `week18/agent_loop/README.md` + `week18/agent_loop_comprehensive_tutorial.pdf`. A whole click-through costs a few cents; if the `claude` CLI isn't signed in, the app still loads and prints install hints instead of calling the model.
+
+**The throughline:** the loop you bounded with `max_iterations` in Week 5 is the *same* loop — Week 18 just wires it to real tools, real safety gates, real sessions, and a real cost cap. Hooks here are the SDK-native form of the Week 5 guardrail table: *hard stops live in code (a PreToolUse hook), never in the prompt.*
 
 ---
 
