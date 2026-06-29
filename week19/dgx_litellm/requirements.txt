@@ -1,0 +1,21 @@
+# Week 19 · App 5 — Serving models on a DGX with LiteLLM
+#
+# Install into the repo's uv-managed .venv (Python 3.13):
+#     uv pip install -r week19/dgx_litellm/requirements.txt
+#
+# The app auto-detects three situations:
+#   PROXY  — a real LiteLLM proxy answers at LITELLM_BASE_URL (default :4000)
+#   DIRECT — no proxy, but a backend (Ollama/vLLM) is reachable → real backend calls
+#   SIM    — nothing reachable → the gateway is simulated (no GPU, $0)
+#
+# To run a REAL LiteLLM gateway on the DGX (or this laptop):
+#   pip install 'litellm[proxy]'
+#   litellm --config litellm_config.yaml --port 4000   # config is written by step 1
+#   export LITELLM_BASE_URL=http://localhost:4000
+# And a backend behind it:
+#   ollama run qwen3.6:35b-a3b-q8_0      # or gemma4:12b on a Mac
+
+openai>=1.40          # client for the gateway / backend (PROXY + DIRECT modes)
+fastapi>=0.110        # the tutorial web app's control plane
+uvicorn>=0.29         # ASGI server for the web app
+# litellm[proxy]      # the gateway itself — install when you run it for real

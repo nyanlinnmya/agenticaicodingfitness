@@ -1,0 +1,19 @@
+# Week 19 — Observability on a DGX (Phoenix + NeMo Agent Toolkit)
+#
+# Install into the repo's uv-managed .venv (Python 3.13):
+#     uv pip install -r week19/dgx_observability/requirements.txt
+#
+# The tracer is dependency-free (teaching-sized OTel), so the whole app runs in
+# SIM with no GPU and no Phoenix install. In REAL mode the agent calls a live
+# OpenAI-compatible endpoint (Ollama / vLLM on this box or a DGX). No cloud cost.
+#   ollama run qwen3.6:35b-a3b-q8_0      # or gemma4:12b on a Mac
+#
+# OPTIONAL — to stream spans into a real Phoenix UI on your DGX:
+#     pip install arize-phoenix openinference-instrumentation-openai
+#     python -m phoenix.server.main serve     # UI at http://localhost:6006
+# OPTIONAL — the NeMo Agent Toolkit itself (Ch 6-8 show real config):
+#     pip install nvidia-nat
+
+openai>=1.40          # the agent's client, pointed at the local base_url (REAL mode)
+fastapi>=0.110        # the tutorial web app's control plane
+uvicorn>=0.29         # ASGI server for the web app

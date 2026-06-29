@@ -1,0 +1,17 @@
+# Week 19 — Self-Evolving Agent v2 (sovereign, on a DGX)
+#
+# Install into the repo's uv-managed .venv (Python 3.13):
+#     uv pip install -r week19/self_evolving_agent_v2/requirements.txt
+#
+# The agent has a SWITCHABLE BRAIN (set with the BRAIN env var):
+#   BRAIN=local   → a local OpenAI-compatible model (Ollama / vLLM on a DGX). Sovereign.
+#                   needs `openai`;  ollama run qwen3.6:35b-a3b-q8_0
+#   BRAIN=claude  → Anthropic Claude. needs `anthropic` + ANTHROPIC_API_KEY.
+#   BRAIN=sim     → scripted stub, no model, $0 offline. needs nothing extra.
+#   BRAIN=auto    → local if up, else claude, else sim (the default).
+# The tripartite memory lives on local disk (.memory/) — it never leaves the box.
+
+openai>=1.40          # the local (sovereign) brain — BRAIN=local
+anthropic>=0.40       # the cloud brain — BRAIN=claude (optional)
+fastapi>=0.110        # the tutorial web app's control plane
+uvicorn>=0.29         # ASGI server for the web app

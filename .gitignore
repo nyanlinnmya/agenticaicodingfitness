@@ -23,3 +23,5 @@ ex*_brief_output.md
 ex*_audit_output.*
 
 altoplayground/
+# local clone of NVIDIA DGX playbooks (source material, not our content)
+dgx-spark-playbooks/

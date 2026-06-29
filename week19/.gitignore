@@ -1,0 +1,6 @@
+# Week 19 — generated / runtime artifacts (never commit these)
+**/.sandbox/
+**/.memory/
+**/__pycache__/
+*.pyc
+.venv/

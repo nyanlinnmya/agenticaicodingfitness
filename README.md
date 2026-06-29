@@ -40,7 +40,7 @@ We ship new skills as the course grows (we're on **v2.2.0 — 20 skills**). To g
 
 **Prefer clicking?** Run `/plugin` for the interactive manager: **Marketplaces** tab → select *agentic-coding-fitness* → **Update**, then **Installed** tab → select the plugin → **Reinstall**, then `/reload-plugins`. (You can also toggle **Enable auto-update** on the marketplace so new versions are fetched at startup.)
 
-Covers: LLM basics · tool use · agent loops (now incl. the Week 18 Claude Agent SDK production loop) · MCP & skills · RAG · multi-agent systems · production & observability · agent evaluation/CI · knowledge-graph memory · production GraphRAG · choosing models & patterns · the NVIDIA NeMo Agent Toolkit · long-running & distributed agents (Google ADK durable sessions, pause/resume, auth.md, A2A fleets) · self-evolving agents (tripartite memory + consolidation) · sovereign AI at the edge (local/$0 inference) · vibe-coding & security · the A2A protocol · skill-authoring. See [`plugins/agentic-coding-fitness/`](plugins/agentic-coding-fitness/) for details.
+Covers: LLM basics · tool use · agent loops (now incl. the Week 18 Claude Agent SDK production loop) · MCP & skills · RAG · multi-agent systems · production & observability · agent evaluation/CI · knowledge-graph memory · production GraphRAG · choosing models & patterns · the NVIDIA NeMo Agent Toolkit · long-running & distributed agents (Google ADK durable sessions, pause/resume, auth.md, A2A fleets) · self-evolving agents (tripartite memory + consolidation) · sovereign AI at the edge (local/$0 inference) · sovereign & self-evolving AI on an NVIDIA DGX (serve/fine-tune/observe/gateway) · vibe-coding & security · the A2A protocol · skill-authoring. See [`plugins/agentic-coding-fitness/`](plugins/agentic-coding-fitness/) for details.
 
 ## 📂 Repository Contents 
 
@@ -118,6 +118,15 @@ Three interactive web apps + runnable demos that take the agent stack to product
 - **`week18/self_evolving_agent/`** — turn a *stateless* agent into one that **remembers, learns, and gets cheaper** via the **Tripartite Memory Model** (episodic `SessionDB` + semantic `MEMORY.md`/`USER.md` + procedural `SKILL.md` library) and a background **consolidation** loop → compound returns (~64% fewer turns / ~66% lower cost by run 5). Live visualizer (port 8088) + step-by-step guide (port 8090); 7 checkpoints (1–6 offline, $0).
 - **`week18/sovereign_ai_edge/`** — run the **whole stack on hardware you own** with zero cloud dependency and **$0 per token**: local OpenAI-compatible inference (Ollama), RAM-based hardware sizing, quantization math, LoRA/NeMo fine-tuning, on-device tool-calling agents, a Smart-Hotel HVAC demo, and a live air-gap **sovereignty audit**. Web app on port 8091 + 9 demos.
 - Comprehensive write-ups per folder (`README.md`/`TUTORIAL.md`) plus tutorial PDFs: `agent_loop_comprehensive_tutorial.pdf`, `self_evolving_agent_tutorial.pdf`, `sovereign_ai_edge_tutorial.pdf`.
+
+#### 🔹 Week 19: Sovereign & Self-Evolving AI on a DGX
+Five interactive web apps that take the whole stack onto an **NVIDIA DGX** — run/serve, fine-tune, observe, self-evolve, and gateway — grounded in NVIDIA's [`dgx-spark-playbooks`](https://github.com/NVIDIA/dgx-spark-playbooks). Every app runs **REAL** (a live Ollama/vLLM/DGX endpoint) or **SIM** (a faithful simulator — no GPU needed); cloud cost always **$0**.
+- 👉 **Start here: the step-by-step walkthrough → [`week19/README.md`](week19/README.md)** — walks you through all five apps in order, chapter by chapter.
+- **`week19/sovereign_dgx/`** (port 8092) — run + serve + manage models on a DGX: **Ollama, vLLM, llama.cpp**, TensorRT-LLM, NVFP4 quantization, multi-Spark scale-out, air-gap audit.
+- **`week19/dgx_finetune/`** (port 8093) — adapt a model to **your domain**: LoRA/QLoRA with **NeMo AutoModel** + **Unsloth**, dataset prep, training loop, eval, GGUF/NVFP4 export.
+- **`week19/dgx_observability/`** (port 8094) — **see, measure, judge** a sovereign agent: OpenTelemetry tracing → **Arize Phoenix**, metrics, LLM-as-judge evals, + a **NeMo Agent Toolkit** workflow.
+- **`week19/self_evolving_agent_v2/`** (port 8095) — the Week 18 self-evolving agent, made sovereign: a **switchable brain** (DGX ↔ Claude) + tripartite **memory on the DGX** that learns over time.
+- **`week19/dgx_litellm/`** (port 8096) — the **serving gateway**: one OpenAI URL over all backends with **LiteLLM** — routing, fallbacks, hot-swap, virtual keys/budgets, logging → Phoenix.
 
 ---
 
