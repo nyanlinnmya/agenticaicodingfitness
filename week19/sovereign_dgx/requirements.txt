@@ -1,0 +1,17 @@
+# Week 19 — Sovereign AI on a DGX (interactive tutorial + real/simulated demos)
+#
+# Install into the repo's uv-managed .venv (Python 3.13):
+#     uv pip install -r week19/sovereign_dgx/requirements.txt
+#
+# The demos run in two modes (auto-detected):
+#   • REAL — a live OpenAI-compatible endpoint (Ollama / vLLM / llama.cpp on this
+#     laptop, or a DGX you point DGX_BASE_URL at). No cloud key, no cloud cost.
+#         curl -fsSL https://ollama.com/install.sh | sh
+#         ollama run qwen3.6:35b-a3b-q8_0      # DGX Spark / Ubuntu GPU
+#         ollama run gemma4:12b                # Mac / smaller boxes
+#   • SIM  — no endpoint reachable → a DGX Spark simulator runs instead (no GPU
+#     needed). Only `openai` is used in REAL mode; SIM needs no extra deps.
+
+openai>=1.40          # drop-in client, pointed at the local base_url (REAL mode)
+fastapi>=0.110        # the tutorial web app's control plane
+uvicorn>=0.29         # ASGI server for the web app
