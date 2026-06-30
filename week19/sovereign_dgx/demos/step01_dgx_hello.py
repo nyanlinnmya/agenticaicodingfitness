@@ -28,7 +28,7 @@ def main() -> None:
 
     print("The code is exactly what you'd write against OpenAI — only base_url changes:\n")
     print("    from openai import OpenAI")
-    print(f'    client = OpenAI(base_url="{config.BASE_URL}", api_key="…")')
+    print(f'    client = OpenAI(base_url="{config.safe_base_url()}", api_key="…")')
     print(f'    client.chat.completions.create(model="{config.MODEL}", messages=[...],')
     print("                                   stream=True)\n")
 

@@ -43,7 +43,7 @@ def mode_line() -> None:
         _p("  the launch commands shown are exactly what you'd run on real hardware.")
     else:
         _p(f"{S_FT} MODE: REAL · connection = {config.CONN} ({config.conn_human()}).")
-        _p(f"  eval runs against {config.MODEL} @ {config.BASE_URL}.")
+        _p(f"  eval runs against {config.MODEL} @ {config.safe_base_url()}.")
         _p("  (the training LOOP is still simulated unless you run it on a real DGX.)")
     _p("")
 

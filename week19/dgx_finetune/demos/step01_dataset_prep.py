@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""PART 1 · Build a domain SFT dataset (on-prem)  [BEGINNER]
+"""STEP 1 · 💻 Build the dataset + training script (on your laptop)  [BEGINNER]
 
-Fine-tuning starts with data — and the sovereignty win is that your proprietary
-data NEVER leaves the building. This demo turns a few "domain documents" into a
-real instruction-tuning dataset in the OpenAI/ShareGPT messages format and writes
-train/val JSONL splits into .sandbox/ so the later steps can use them.
+REAL and runs locally: turns domain (instruction, response) pairs into an
+instruction-tuning dataset (OpenAI chat-messages JSONL, train/val splits) AND
+writes the actual Unsloth training script — all into .sandbox/. STEP 2 pushes
+these to the DGX over SSH; STEP 4 runs the script there for real.
 
-Domain: smart-hotel HVAC operations (ties back to the Week 18 hotel agent).
+Domain: smart-hotel HVAC operations.
 
 Run:  python demos/step01_dataset_prep.py
 """
@@ -19,13 +19,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import config  # noqa: E402
-import ftview  # noqa: E402
 
 SYSTEM = ("You are HotelHVAC-Assistant, an expert in smart-hotel HVAC operations. "
           "Answer with specific setpoints, thresholds, and alarm priorities.")
 
-# A handful of domain (instruction, response) pairs — in reality you'd generate
-# hundreds of these from your manuals, tickets, and SOPs.
 PAIRS = [
     ("A guest room reads 26 °C with the fan-coil at max. What do I do?",
      "Drop chilled-water supply to 6.5 °C and stage the second compressor. If the "
@@ -41,6 +38,38 @@ PAIRS = [
      "Check approach temperature first; dispatch ROUTINE inspection, trend for 24h."),
 ]
 
+# The REAL Unsloth training script that runs on the DGX (inside the NGC container).
+TRAIN_SCRIPT = '''\
+#!/usr/bin/env python3
+"""Unsloth LoRA fine-tune — runs ON THE DGX. Reads train.jsonl, writes hvac-model GGUF."""
+import os
+from unsloth import FastLanguageModel
+from datasets import load_dataset
+from trl import SFTTrainer, SFTConfig
+
+MODEL = os.environ.get("HF_MODEL", "unsloth/Llama-3.2-1B-Instruct")
+MAX_STEPS = int(os.environ.get("MAX_STEPS", "60"))
+print(f"[unsloth] loading {MODEL} in 4-bit (QLoRA)…", flush=True)
+model, tok = FastLanguageModel.from_pretrained(MODEL, max_seq_length=2048, load_in_4bit=True)
+model = FastLanguageModel.get_peft_model(
+    model, r=16, lora_alpha=32,
+    target_modules=["q_proj", "k_proj", "v_proj", "o_proj"])
+
+ds = load_dataset("json", data_files={"train": "train.jsonl"})["train"]
+ds = ds.map(lambda ex: {"text": tok.apply_chat_template(ex["messages"], tokenize=False)})
+
+SFTTrainer(
+    model=model, tokenizer=tok, train_dataset=ds, dataset_text_field="text",
+    args=SFTConfig(max_steps=MAX_STEPS, learning_rate=2e-4, warmup_steps=5,
+                   per_device_train_batch_size=1, gradient_accumulation_steps=4,
+                   logging_steps=1, output_dir="out", report_to=[]),
+).train()
+
+print("[unsloth] exporting GGUF (q4_k_m) → ./hvac-model/ …", flush=True)
+model.save_pretrained_gguf("hvac-model", tok, quantization_method="q4_k_m")
+print("[unsloth] DONE — adapter + GGUF written.", flush=True)
+'''
+
 
 def to_record(instr: str, resp: str) -> dict:
     return {"messages": [
@@ -51,33 +80,33 @@ def to_record(instr: str, resp: str) -> dict:
 
 
 def main() -> None:
-    ftview.banner("PART 1", "Build a domain SFT dataset (on-prem)", "BEGINNER")
-    ftview.mode_line()
+    print("━" * 64)
+    print("  STEP 1 · 💻 Build dataset + training script (laptop)")
+    print("━" * 64, "\n")
 
     sb = config.ensure_sandbox()
     records = [to_record(i, r) for i, r in PAIRS]
-    # tiny but real train/val split
     train, val = records[:3], records[3:]
     (sb / "train.jsonl").write_text("\n".join(json.dumps(r) for r in train) + "\n")
     (sb / "val.jsonl").write_text("\n".join(json.dumps(r) for r in val) + "\n")
+    (sb / "train_hvac_unsloth.py").write_text(TRAIN_SCRIPT)
 
     print(f"Domain: {config.DOMAIN}")
-    print(f"Format: OpenAI/ShareGPT chat messages (NeMo, Unsloth, LLaMA-Factory all read this)\n")
-    print("Wrote real files into .sandbox/:")
-    print(f"  • train.jsonl  ({len(train)} examples)")
-    print(f"  • val.jsonl    ({len(val)} examples)\n")
-    print("One record (pretty-printed):\n")
+    print("Wrote REAL files into .sandbox/ (on your laptop):")
+    print(f"  • train.jsonl              ({len(train)} examples)")
+    print(f"  • val.jsonl                ({len(val)} examples)")
+    print("  • train_hvac_unsloth.py    (the Unsloth LoRA script that runs on the DGX)\n")
+    print("One training record:\n")
     print(json.dumps(records[0], indent=2))
 
-    print("\nData-prep rules that matter for quality:")
-    print("  • Consistent SYSTEM prompt → the behaviour you want baked in.")
-    print("  • Diverse, REAL examples > many near-duplicates (avoid overfitting).")
-    print("  • Hold out a val split you NEVER train on — that's your honesty check.")
+    print("\nData-prep rules that matter:")
+    print("  • Consistent SYSTEM prompt → the behaviour you bake in.")
+    print("  • Diverse REAL examples > near-duplicates. Hold out a val split.")
     print("  • 50–500 good examples already move a base model a lot with LoRA.")
-    print("  • Your data stays local: this is why you fine-tune on a DGX, not a cloud.")
+    print("  • Your data stays local until YOU push it to YOUR DGX — that's the point.")
 
-    print("\nTakeaway: domain adaptation is mostly a DATA problem. Next: pick the")
-    print("training METHOD (LoRA / QLoRA / full SFT) that fits your DGX.")
+    print("\nTakeaway: dataset + script are ready on your laptop. STEP 2 connects to")
+    print("your DGX over SSH and pushes them there.")
 
 
 if __name__ == "__main__":

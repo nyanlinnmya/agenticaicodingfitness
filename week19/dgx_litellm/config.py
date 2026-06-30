@@ -69,10 +69,77 @@ def conn_human() -> str:
             "cloud": "cloud provider"}.get(CONN, CONN)
 
 
+def safe_backend_url() -> str:
+    """BACKEND_URL with any password masked, safe to print in the UI/logs."""
+    p = urlparse(BACKEND_URL)
+    if not p.username:
+        return BACKEND_URL
+    netloc = p.hostname or ""
+    if p.port:
+        netloc += f":{p.port}"
+    return p._replace(netloc=f"{p.username}:***@{netloc}").geturl()
+
+
+def _with_userinfo(url: str, auth: str) -> str:
+    p = urlparse(url)
+    netloc = p.hostname or ""
+    if p.port:
+        netloc += f":{p.port}"
+    return p._replace(netloc=f"{auth}@{netloc}").geturl()
+
+
+def apply_connection(p: dict) -> None:
+    """Re-point the BACKEND connection at runtime from a UI request, then re-detect."""
+    global CONN, BACKEND_URL, BACKEND_KEY, MODE, SITUATION, MODEL
+    conn = (p.get("conn") or "local").lower()
+    for k in ("DGX_CONN", "DGX_BASE_URL", "DGX_TUNNEL_URL", "DGX_CLOUD_URL",
+              "DGX_API_KEY", "EDGE_BASE_URL", "EDGE_API_KEY"):
+        os.environ.pop(k, None)
+    os.environ["DGX_CONN"] = conn
+    url = (p.get("url") or "").strip()
+    key = (p.get("key") or "").strip()
+    auth = (p.get("auth") or "").strip()
+    if conn == "tunnel":
+        if auth and url and "@" not in url.split("//", 1)[-1]:
+            url = _with_userinfo(url, auth)
+        if url:
+            os.environ["DGX_TUNNEL_URL"] = url
+        if key:
+            os.environ["DGX_API_KEY"] = key
+    elif conn == "cloud":
+        if url:
+            os.environ["DGX_CLOUD_URL"] = url
+        if key:
+            os.environ["DGX_API_KEY"] = key
+    else:
+        if url:
+            os.environ["DGX_BASE_URL"] = url
+    CONN, BACKEND_URL, BACKEND_KEY = _resolve_connection()
+    MODE = mode()
+    SITUATION = situation()
+    MODEL = pick_model()
+
+
 def _open(url: str, timeout: float = 4):
-    headers = {}
-    if BACKEND_KEY and CONN != "local":
+    """urlopen that authenticates tunnel/cloud backends (Basic via URL userinfo or
+    a DGX_API_KEY of the form "user:pass", e.g. ngrok --basic-auth; else Bearer)."""
+    import base64
+    headers, p = {}, urlparse(url)
+    user, pwd = p.username, p.password
+    if user is None and BACKEND_KEY and ":" in BACKEND_KEY and CONN != "local":
+        user, pwd = BACKEND_KEY.split(":", 1)
+    if user is not None:
+        headers["Authorization"] = "Basic " + base64.b64encode(
+            f"{user}:{pwd or ''}".encode()).decode()
+        netloc = p.hostname or ""
+        if p.port:
+            netloc += f":{p.port}"
+        url = p._replace(netloc=netloc).geturl()
+    elif BACKEND_KEY and CONN != "local":
         headers["Authorization"] = f"Bearer {BACKEND_KEY}"
+    if (p.hostname or "").endswith("anthropic.com") and BACKEND_KEY and ":" not in BACKEND_KEY:
+        headers["x-api-key"] = BACKEND_KEY          # Anthropic uses x-api-key, not Bearer
+        headers["anthropic-version"] = "2023-06-01"
     return urlopen(Request(url, headers=headers), timeout=timeout)
 _PREFERRED = ["qwen3.6:35b-a3b-q8_0", "qwen3.6", "gemma4:12b", "gemma4", "llama3.1:8b"]
 

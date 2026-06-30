@@ -59,10 +59,76 @@ def conn_human() -> str:
             "cloud": "cloud provider"}.get(CONN, CONN)
 
 
+def safe_base_url() -> str:
+    """BASE_URL with any password masked, safe to print in the UI/logs."""
+    p = urlparse(BASE_URL)
+    if not p.username:
+        return BASE_URL
+    netloc = p.hostname or ""
+    if p.port:
+        netloc += f":{p.port}"
+    return p._replace(netloc=f"{p.username}:***@{netloc}").geturl()
+
+
+def _with_userinfo(url: str, auth: str) -> str:
+    p = urlparse(url)
+    netloc = p.hostname or ""
+    if p.port:
+        netloc += f":{p.port}"
+    return p._replace(netloc=f"{auth}@{netloc}").geturl()
+
+
+def apply_connection(p: dict) -> None:
+    """Re-point the connection at runtime from a UI request, then re-detect."""
+    global CONN, BASE_URL, API_KEY, MODE, MODEL
+    conn = (p.get("conn") or "local").lower()
+    for k in ("DGX_CONN", "DGX_BASE_URL", "DGX_TUNNEL_URL", "DGX_CLOUD_URL",
+              "DGX_API_KEY", "EDGE_BASE_URL", "EDGE_API_KEY"):
+        os.environ.pop(k, None)
+    os.environ["DGX_CONN"] = conn
+    url = (p.get("url") or "").strip()
+    key = (p.get("key") or "").strip()
+    auth = (p.get("auth") or "").strip()
+    if conn == "tunnel":
+        if auth and url and "@" not in url.split("//", 1)[-1]:
+            url = _with_userinfo(url, auth)
+        if url:
+            os.environ["DGX_TUNNEL_URL"] = url
+        if key:
+            os.environ["DGX_API_KEY"] = key
+    elif conn == "cloud":
+        if url:
+            os.environ["DGX_CLOUD_URL"] = url
+        if key:
+            os.environ["DGX_API_KEY"] = key
+    else:
+        if url:
+            os.environ["DGX_BASE_URL"] = url
+    CONN, BASE_URL, API_KEY = _resolve_connection()
+    MODE = mode()
+    MODEL = pick_model()
+
+
 def _open(url: str, timeout: float = 4):
-    headers = {}
-    if API_KEY and CONN != "local":
+    """urlopen that authenticates tunnel/cloud endpoints (Basic via URL userinfo or
+    a DGX_API_KEY of the form "user:pass", e.g. ngrok --basic-auth; else Bearer)."""
+    import base64
+    headers, p = {}, urlparse(url)
+    user, pwd = p.username, p.password
+    if user is None and API_KEY and ":" in API_KEY and CONN != "local":
+        user, pwd = API_KEY.split(":", 1)
+    if user is not None:
+        headers["Authorization"] = "Basic " + base64.b64encode(
+            f"{user}:{pwd or ''}".encode()).decode()
+        netloc = p.hostname or ""
+        if p.port:
+            netloc += f":{p.port}"
+        url = p._replace(netloc=netloc).geturl()
+    elif API_KEY and CONN != "local":
         headers["Authorization"] = f"Bearer {API_KEY}"
+    if (p.hostname or "").endswith("anthropic.com") and API_KEY and ":" not in API_KEY:
+        headers["x-api-key"] = API_KEY              # Anthropic uses x-api-key, not Bearer
+        headers["anthropic-version"] = "2023-06-01"
     return urlopen(Request(url, headers=headers), timeout=timeout)
 
 _PREFERRED = [
@@ -138,3 +204,34 @@ MODEL = pick_model()
 def ensure_sandbox() -> Path:
     SANDBOX.mkdir(parents=True, exist_ok=True)
     return SANDBOX
+
+
+# ── DGX SSH target for REAL fine-tuning (set from the UI panel) ───────────────
+def ssh_status() -> dict:
+    host = os.environ.get("FT_SSH_HOST", "")
+    user = os.environ.get("FT_SSH_USER", "")
+    return {
+        "configured": bool(host and user),
+        "host": host, "user": user,
+        "port": os.environ.get("FT_SSH_PORT", ""),
+        "workdir": os.environ.get("FT_WORKDIR", "~/dgx_finetune_demo"),
+        "hf_model": os.environ.get("FT_HF_MODEL", BASE_MODEL),
+        "has_token": bool(os.environ.get("FT_HF_TOKEN")),
+    }
+
+
+def apply_ssh(p: dict) -> None:
+    """Persist SSH + fine-tune params to env so demo subprocesses inherit them."""
+    def setenv(k: str, v) -> None:
+        v = (v or "").strip()
+        if v:
+            os.environ[k] = v
+        else:
+            os.environ.pop(k, None)
+    setenv("FT_SSH_HOST", p.get("host"))
+    setenv("FT_SSH_USER", p.get("user"))
+    setenv("FT_SSH_PORT", p.get("port"))
+    setenv("FT_SSH_KEY", p.get("key"))
+    setenv("FT_WORKDIR", p.get("workdir"))
+    setenv("FT_HF_MODEL", p.get("hf_model"))
+    setenv("FT_HF_TOKEN", p.get("hf_token"))

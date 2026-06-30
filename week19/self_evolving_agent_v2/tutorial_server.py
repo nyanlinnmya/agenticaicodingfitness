@@ -121,10 +121,14 @@ STEP_BY_ID = {s["id"]: s for s in STEPS}
 app = FastAPI(title="Self-Evolving Agent v2 — interactive tutorial")
 _run_lock = asyncio.Lock()
 
+SELECTED = {"model": config.MODEL}
+_SIM_MODELS = ["qwen3.6:35b-a3b-q8_0", "llama3.3:70b", "gemma4:12b", "llama3.1:8b"]
+
 
 @app.get("/")
 async def index() -> FileResponse:
-    return FileResponse(PKG / "static" / "guide.html")
+    return FileResponse(PKG / "static" / "guide.html",
+                        headers={"Cache-Control": "no-store, max-age=0"})
 
 
 @app.get("/api/steps")
@@ -133,10 +137,39 @@ async def steps() -> dict:
         return {k: s.get(k) for k in ("id", "group", "title", "desc", "kind", "level")} | \
                {"demo": s.get("demo")}
     import memory
+    models = config.list_local_models() or _SIM_MODELS
+    if SELECTED["model"] not in models:
+        SELECTED["model"] = models[0]
     return {"steps": [public(s) for s in STEPS], "brain": config.BRAIN,
             "conn": config.CONN, "conn_human": config.conn_human(),
-            "model": config.MODEL, "base_url": config.BASE_URL,
+            "model": SELECTED["model"], "base_url": config.BASE_URL, "models": models,
             "memory": memory.stats()}
+
+
+class ModelRequest(BaseModel):
+    model: str
+
+
+@app.post("/api/select_model")
+async def select_model(req: ModelRequest) -> dict:
+    SELECTED["model"] = req.model
+    return {"ok": True, "model": req.model}
+
+
+class ConnRequest(BaseModel):
+    conn: str = "local"
+    url: str | None = None
+    key: str | None = None
+    auth: str | None = None
+
+
+@app.post("/api/connect")
+async def connect(req: ConnRequest) -> dict:
+    config.apply_connection(req.model_dump())
+    models = config.list_local_models() or _SIM_MODELS
+    SELECTED["model"] = config.MODEL if config.MODEL in models else (models[0] if models else config.MODEL)
+    return {"ok": True, "conn": config.CONN, "endpoint_up": config.endpoint_up(),
+            "model": SELECTED["model"], "models": models}
 
 
 @app.get("/api/source/{step_id}")
@@ -153,7 +186,7 @@ async def source(step_id: str) -> dict:
 def _stream_demo(demo: str, timeout: float):
     async def gen():
         start = time.time()
-        env = {**os.environ, "PYTHONUNBUFFERED": "1"}
+        env = {**os.environ, "PYTHONUNBUFFERED": "1", "DGX_MODEL": SELECTED["model"]}
         proc = await asyncio.create_subprocess_exec(
             PY, str(DEMOS / demo), cwd=str(PKG), env=env,
             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT)

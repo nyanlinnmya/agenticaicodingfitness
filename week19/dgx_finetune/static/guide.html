@@ -22,6 +22,39 @@
   .pill .dot{width:8px;height:8px;border-radius:50%;background:var(--dim)}
   .pill.real .dot{background:var(--green)} .pill.sim .dot{background:var(--cyan)}
   .pill.sim{color:var(--cyan)} .pill.real{color:var(--green)}
+  .model-sel{font:inherit;font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid var(--line);
+        background:var(--panel2);color:var(--txt);max-width:230px;cursor:pointer}
+  .model-sel:hover{border-color:var(--accent)} .model-sel:disabled{opacity:.5;cursor:not-allowed}
+  .model-lbl{font-size:11px;color:var(--dim)}
+  .lap{color:var(--cyan);font-weight:600} .dgx{color:var(--accent);font-weight:600}
+  .legendbar{padding:6px 20px;font-size:12px;color:var(--dim);background:var(--panel);
+        border-bottom:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .legendbar a{color:var(--accent);cursor:pointer;text-decoration:underline}
+  .runhint{display:flex;gap:10px;align-items:flex-start;margin:0 0 14px;padding:10px 12px;border-radius:8px;
+        background:var(--panel);border:1px solid var(--line);font-size:12.5px;color:#cdd6c2}
+  .runhint a{color:var(--accent);cursor:pointer;text-decoration:underline}
+  .help-ov{position:fixed;inset:0;background:rgba(0,0,0,.62);display:none;z-index:60;padding:28px}
+  .help-ov.show{display:flex;justify-content:center;align-items:flex-start}
+  .help-box{background:var(--panel);border:1px solid var(--line);border-radius:12px;max-width:840px;width:100%;
+        max-height:86vh;overflow:auto;padding:20px 26px;line-height:1.5}
+  .help-box h3{margin:0 0 8px} .help-box h4{margin:16px 0 6px;color:var(--accent)}
+  .help-box code{background:var(--panel2);padding:1px 5px;border-radius:5px;font-size:12px}
+  .help-box pre{background:var(--term);border:1px solid var(--line);border-radius:8px;padding:10px 12px;
+        overflow:auto;font-size:12px;color:#cdd6c2}
+  .help-box table{border-collapse:collapse;width:100%;font-size:12.5px;margin:6px 0}
+  .help-box td,.help-box th{border:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}
+  .help-x{float:right;cursor:pointer;color:var(--dim);font-size:20px;line-height:1}
+  .help-x:hover{color:var(--txt)}
+  .pill.clickable{cursor:pointer} .pill.clickable:hover{border-color:var(--accent)}
+  .conn-modes{display:flex;flex-direction:column;gap:8px;margin:10px 0}
+  .conn-modes label{display:flex;gap:8px;align-items:center;cursor:pointer;font-size:13px}
+  .cf-row{display:flex;flex-direction:column;gap:4px;margin:10px 0}
+  .cf-row label{font-size:12px;color:var(--dim)}
+  .cf-row input,.cf-row select{font:inherit;font-size:13px;padding:7px 9px;border-radius:8px;
+        border:1px solid var(--line);background:var(--panel2);color:var(--txt);width:100%}
+  .cf-hint{font-size:11.5px;color:var(--dim);margin:2px 0 0}
+  .pill.sshok{color:var(--green)} .pill.sshok .dot{background:var(--green)}
+  .help-box hr{border:none;border-top:1px solid var(--line);margin:14px 0}
   .tbtn{font:inherit;font-size:12px;font-weight:600;padding:6px 12px;border-radius:8px;cursor:pointer;
         border:1px solid var(--line);background:var(--panel2);color:var(--txt)}
   .tbtn:hover{border-color:var(--accent)}
@@ -59,6 +92,29 @@
        border:1px solid var(--green);background:rgba(118,185,0,.16);color:var(--txt)}
   .run:hover:not(:disabled){background:rgba(118,185,0,.30)} .run:disabled{opacity:.45;cursor:not-allowed}
   .note{font-size:12px;color:var(--amber)}
+  .viz{margin:4px 0 18px;padding:14px 16px;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+  .viz h4{margin:0 0 12px;font-size:12.5px;color:var(--accent);font-weight:650}
+  .vrow{display:flex;align-items:center;gap:10px;margin:7px 0;font-size:12px}
+  .vrow .lbl{flex:0 0 160px;text-align:right;color:#cdd6c2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .vtrack{flex:1;background:var(--panel2);border-radius:5px;height:18px;overflow:hidden}
+  .vbar{height:100%;border-radius:5px;width:0;animation:vgrow .9s cubic-bezier(.2,.8,.2,1) forwards}
+  .vrow .val{flex:0 0 78px;color:var(--dim);font-variant-numeric:tabular-nums}
+  @keyframes vgrow{from{width:0}}
+  .meter{position:relative;height:34px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);overflow:hidden}
+  .meter>span{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:7px 0 0 7px;
+        background:linear-gradient(90deg,var(--accent),var(--amber));animation:vgrow 1.1s ease-out forwards}
+  .meter .ml{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;text-shadow:0 1px 2px #000}
+  .vhint{font-size:11.5px;color:var(--dim);margin:9px 0 0}
+  .vlegend{font-size:11px;color:var(--dim);margin-top:8px;display:flex;gap:14px;flex-wrap:wrap}
+  .vlegend i{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:4px;vertical-align:middle}
+  svg .draw{stroke-dasharray:1400;stroke-dashoffset:1400;animation:vdraw 1.8s ease-out forwards}
+  @keyframes vdraw{to{stroke-dashoffset:0}}
+  svg .pop{opacity:0;animation:vpop .4s ease-out forwards}
+  @keyframes vpop{to{opacity:1}}
+  .loopdiag .arrow{position:relative}
+  .loopdiag .arrow::after{content:"";position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;
+        border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);opacity:0;animation:vflow 2.4s linear infinite}
+  @keyframes vflow{0%{opacity:0;transform:translateX(-10px)}30%{opacity:1}70%{opacity:1}100%{opacity:0;transform:translateX(10px)}}
   .term-wrap{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--term)}
   .term-bar{display:flex;align-items:center;gap:8px;padding:7px 12px;background:#0f120b;border-bottom:1px solid var(--line);
             font-size:11px;color:var(--dim)}
@@ -94,18 +150,109 @@
   <h1>▣ Fine-tuning on a DGX</h1>
   <span class="sub">interactive · adapt a model to YOUR domain, on-prem · real or simulated · $0</span>
   <span class="grow"></span>
-  <span class="pill" id="pill-mode"><span class="dot"></span><span id="mode-txt">checking…</span></span>
+  <span class="model-lbl">model:</span>
+  <select class="model-sel" id="model-sel" onchange="selectModel()" title="model on the DGX — used by every demo"></select>
+  <span class="pill clickable" id="pill-mode" onclick="toggleConn()" title="click to change connection"><span class="dot"></span><span id="mode-txt">checking…</span></span>
+  <button class="tbtn" onclick="toggleConn()">🔌 Connection</button>
+  <span class="pill" id="ssh-pill" title="DGX SSH for fine-tuning"><span class="dot"></span><span id="ssh-pill-txt">SSH?</span></span>
+  <button class="tbtn" onclick="toggleSSH()">🖥️ DGX SSH</button>
   <button class="tbtn" onclick="cleanFiles()">🧹 Clean sandbox</button>
 </header>
 <div class="progress"><div id="bar"></div></div>
+<div class="legendbar">
+  <span><span class="lap">💻 laptop</span> runs this tutorial · <span class="dgx">🖥️ DGX</span> runs the models — grey shell blocks in chapters are <span class="dgx">DGX</span> commands.</span>
+  <a onclick="toggleHelp()">where do I run each command? ▸</a>
+</div>
 
 <div class="main">
   <nav class="side" id="side"></nav>
   <section class="content" id="content"></section>
 </div>
 
+<div class="help-ov" id="sshpanel" onclick="if(event.target.id==='sshpanel')toggleSSH()">
+ <div class="help-box" style="max-width:600px">
+  <span class="help-x" onclick="toggleSSH()">✕</span>
+  <h3>🖥️ DGX SSH — run the real fine-tune on your DGX</h3>
+  <p style="font-size:12.5px;color:var(--dim)">The 🖥️ steps run real commands on your DGX over <b>key-based SSH</b> and stream output here. Enter your DGX and the model to fine-tune.</p>
+  <div class="cf-row"><label>DGX host or IP</label><input id="ssh-host" placeholder="my-dgx-spark.local"></div>
+  <div class="cf-row"><label>SSH user</label><input id="ssh-user" placeholder="nvidia"></div>
+  <div class="cf-row"><label>SSH port (optional, default 22)</label><input id="ssh-port" placeholder="22"></div>
+  <div class="cf-row"><label>SSH key path (optional)</label><input id="ssh-key" placeholder="~/.ssh/id_ed25519"></div>
+  <div class="cf-row"><label>Remote workdir (optional)</label><input id="ssh-workdir" placeholder="~/dgx_finetune_demo"></div>
+  <hr>
+  <div class="cf-row"><label>HuggingFace model to fine-tune</label><input id="ssh-hfmodel" placeholder="unsloth/Llama-3.2-3B-Instruct"></div>
+  <div class="cf-row"><label>HF token (only for gated models)</label><input id="ssh-hftoken" type="password" placeholder="hf_…"></div>
+  <div style="margin-top:14px;display:flex;gap:10px;align-items:center">
+    <button class="run" onclick="applySSH()">Save</button>
+    <span id="ssh-status" style="font-size:12px;color:var(--dim)"></span>
+  </div>
+  <p class="cf-hint">Key-based SSH only. Test first in a terminal: <code>ssh user@host nvidia-smi -L</code>. Free VRAM before training: <code>ollama stop &lt;model&gt;</code>.</p>
+ </div>
+</div>
+
+<div class="help-ov" id="connpanel" onclick="if(event.target.id==='connpanel')toggleConn()">
+ <div class="help-box" style="max-width:560px">
+  <span class="help-x" onclick="toggleConn()">✕</span>
+  <h3>🔌 Connection — where the models run</h3>
+  <p style="font-size:12.5px;color:var(--dim)">Pick where this app gets its models. It connects live and refreshes — no restart.</p>
+  <div class="conn-modes">
+    <label><input type="radio" name="cmode" value="local" onchange="connFields()"> 💻 <b>Local</b> — scan this laptop's Ollama</label>
+    <label><input type="radio" name="cmode" value="tunnel" onchange="connFields()"> 🌐 <b>Tunnel</b> — your DGX over ngrok (Ollama / vLLM / llama.cpp)</label>
+    <label><input type="radio" name="cmode" value="cloud" onchange="connFields()"> ☁️ <b>Cloud</b> — Claude · Ollama Cloud · OpenRouter</label>
+  </div>
+  <div id="conn-fields"></div>
+  <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
+    <button class="run" onclick="applyConn()">Connect &amp; refresh</button>
+    <span id="conn-status" style="font-size:12px;color:var(--dim)"></span>
+  </div>
+ </div>
+</div>
+
+<div class="help-ov" id="help" onclick="if(event.target.id==='help')toggleHelp()">
+ <div class="help-box">
+  <span class="help-x" onclick="toggleHelp()">✕</span>
+  <h3>💻 vs 🖥️ — where do I run each command?</h3>
+  <p><span class="lap">💻 Your laptop</span> runs <b>this tutorial</b> (the web app you're looking at).
+     <span class="dgx">🖥️ The DGX</span> runs the <b>real models</b>. The laptop talks to the DGX over the
+     connection shown in the mode pill (top-right).</p>
+  <h4>The golden rule</h4>
+  <ul>
+    <li><span class="lap">💻</span> The <code>… tutorial_server.py</code> command (how you launched this) and any
+        <code>export DGX_…</code> run on your <b>laptop</b>.</li>
+    <li><span class="dgx">🖥️</span> Every <b>grey shell block inside a chapter</b> (docker, ollama pull, vllm,
+        nemo, litellm, ngrok…) runs on the <b>DGX</b>. The app only <i>shows</i> them — it never runs them on your laptop.</li>
+  </ul>
+  <h4>Connect this app to your DGX (set on the <span class="lap">💻 laptop</span>, then reload)</h4>
+  <pre># ① DGX on your LAN (or this laptop)
+export DGX_CONN=local
+
+# ② DGX in another network, over an ngrok tunnel
+#    🖥️ on the DGX:  OLLAMA_HOST=0.0.0.0 ollama serve   then:
+#    ngrok http 11434 --host-header="localhost:11434" --basic-auth="user:pass"
+export DGX_CONN=tunnel
+export DGX_TUNNEL_URL="https://user:pass@&lt;id&gt;.ngrok-free.app/v1"
+
+# ③ a cloud provider (Ollama Cloud, etc.)
+export DGX_CONN=cloud
+export DGX_CLOUD_URL=https://ollama.com/v1
+export DGX_API_KEY=&lt;key&gt;</pre>
+  <h4>Which machine runs THIS command?</h4>
+  <table>
+    <tr><th>Command</th><th>Run on</th></tr>
+    <tr><td><code>uv pip install …</code> · <code>… tutorial_server.py</code></td><td><span class="lap">💻 laptop</span></td></tr>
+    <tr><td><code>export DGX_CONN / DGX_BASE_URL / BRAIN …</code></td><td><span class="lap">💻 laptop</span></td></tr>
+    <tr><td><code>ollama serve</code> · <code>ngrok http …</code> · <code>tailscale up</code></td><td><span class="dgx">🖥️ DGX</span></td></tr>
+    <tr><td><code>ollama pull/run</code> (big models) · <code>docker run … nvcr.io/…</code></td><td><span class="dgx">🖥️ DGX</span></td></tr>
+    <tr><td><code>vllm serve</code> · <code>nemo…</code> · <code>litellm --config</code> · <code>trtllm-serve</code> · <code>mpirun</code></td><td><span class="dgx">🖥️ DGX</span></td></tr>
+    <tr><td>anything in a chapter's grey box</td><td><span class="dgx">🖥️ DGX</span></td></tr>
+  </table>
+  <p style="color:var(--dim)">Rule of thumb: <b>if it needs a GPU, it's a DGX command.</b> No GPU? The app
+     auto-runs in <b>SIM</b> so you can still learn everything — every DGX command is shown, none executed locally.</p>
+ </div>
+</div>
+
 <script>
-let STEPS=[], sel=null, MODE="sim", MODEL=null, BASE=null, CONN="local";
+let STEPS=[], sel=null, MODE="sim", MODEL=null, BASE=null, CONN="local", MODELS=[], SSH={}, CONNCFG={};
 const status={}, termCache={}, srcCache={};
 const ICON={idle:"○",running:'<span class="sp"></span>',pass:"✓",fail:"✕"};
 
@@ -148,6 +295,57 @@ function renderSide(){
   document.getElementById("bar").style.width=(runnable.length?100*done/runnable.length:0)+"%";
 }
 function select(id){ sel=id; renderSide(); renderContent(); }
+function toggleHelp(){ document.getElementById("help").classList.toggle("show"); }
+const CLOUD_PROV={ollama_cloud:"https://ollama.com/v1",openrouter:"https://openrouter.ai/api/v1",anthropic:"https://api.anthropic.com/v1",custom:""};
+function toggleConn(){
+  const el=document.getElementById("connpanel"); el.classList.toggle("show");
+  if(el.classList.contains("show")){
+    const r=document.querySelector(`input[name=cmode][value="${CONN}"]`)||document.querySelector('input[name=cmode][value="local"]');
+    if(r)r.checked=true; connFields(); document.getElementById("conn-status").textContent="";
+  }
+}
+function connProvider(){ const p=document.getElementById("cf-prov").value, u=document.getElementById("cf-url"); if(u&&p!=="custom")u.value=CLOUD_PROV[p]; }
+function connFields(){
+  const mode=(document.querySelector('input[name=cmode]:checked')||{}).value||"local";
+  const f=document.getElementById("conn-fields");
+  const esc=s=>(s||"").replace(/"/g,"&quot;");
+  // pre-fill from the last saved connection (persisted server-side)
+  const savedUrl = (CONNCFG.conn===mode ? CONNCFG.url : "") || "";
+  const savedAuth = (CONNCFG.conn===mode ? CONNCFG.auth : "") || "";
+  if(mode==="local"){
+    f.innerHTML=`<div class="cf-row"><label>Ollama URL</label><input id="cf-url" value="${esc(savedUrl)||"http://localhost:11434/v1"}"></div>
+      <p class="cf-hint">Scans this laptop's Ollama (start it with <code>ollama serve</code>).</p>`;
+  }else if(mode==="tunnel"){
+    f.innerHTML=`<div class="cf-row"><label>Tunnel URL (include /v1)</label><input id="cf-url" value="${esc(savedUrl)}" placeholder="https://&lt;id&gt;.ngrok-free.app/v1"></div>
+      <div class="cf-row"><label>Basic auth (user:pass, optional — ngrok --basic-auth)</label><input id="cf-auth" value="${esc(savedAuth)}" placeholder="dgx:agenticai"></div>
+      <p class="cf-hint">Reaches your DGX. Works for Ollama (:11434), vLLM/llama.cpp (:8000/:8080) — all OpenAI-compatible. Saved &amp; remembered.</p>`;
+  }else{
+    f.innerHTML=`<div class="cf-row"><label>Provider</label><select id="cf-prov" onchange="connProvider()">
+        <option value="ollama_cloud">Ollama Cloud</option><option value="openrouter">OpenRouter</option>
+        <option value="anthropic">Anthropic (Claude)</option><option value="custom">Custom (OpenAI-compatible)</option></select></div>
+      <div class="cf-row"><label>Endpoint URL</label><input id="cf-url" value="${esc(savedUrl)||"https://ollama.com/v1"}"></div>
+      <div class="cf-row"><label>API key</label><input id="cf-key" type="password" placeholder="sk-…"></div>
+      <p class="cf-hint">⚠ Cloud runs off your hardware — convenient, not sovereign.</p>`;
+  }
+}
+async function applyConn(){
+  const mode=(document.querySelector('input[name=cmode]:checked')||{}).value||"local";
+  const g=id=>{const e=document.getElementById(id);return e?e.value.trim():"";};
+  document.getElementById("conn-status").textContent="connecting…";
+  let r; try{ r=await jpost("/api/connect",{conn:mode,url:g("cf-url"),key:g("cf-key"),auth:g("cf-auth")}); }
+  catch(e){ document.getElementById("conn-status").textContent="error: "+e.message; return; }
+  await refreshConn();
+  document.getElementById("conn-status").textContent = r.endpoint_up
+    ? `✓ connected · ${r.conn} · ${(r.models||[]).length} model(s)` : "⚠ not reachable — running in SIM";
+}
+async function refreshConn(){
+  const r=await jget("/api/steps"); MODE=r.mode; CONN=r.conn||"local"; MODEL=r.model; MODELS=r.models||[]; BASE=r.base_url;
+  fillModels();
+  const p=document.getElementById("pill-mode");
+  p.classList.toggle("real",MODE==="real"); p.classList.toggle("sim",MODE!=="real");
+  document.getElementById("mode-txt").textContent=pillText();
+}
+const RUNHINT=`<div class="runhint"><span class="dgx">🖥️/💻</span><div><b>Where this runs:</b> clicking <b>Run</b> executes on your <span class="lap">💻 laptop</span>, which calls your DGX over the current connection. The <span class="dgx">🖥️ grey shell blocks</span> in the output are commands to run <b>on the DGX</b> — copy-paste them there. <a onclick="toggleHelp()">where do I run each command? ▸</a></div></div>`;
 function lvClass(l){ if(!l)return "all"; if(l.startsWith("begin"))return "beginner";
   if(l.startsWith("inter"))return "intermediate"; if(l.startsWith("adv"))return "advanced"; return "all"; }
 
@@ -160,6 +358,40 @@ const FLOW=`<div class="loopdiag">
   <span class="node f">GGUF / NVFP4 → serve</span>
   <span class="arrow">⛔</span><span class="nocloud">nothing leaves the box</span>
 </div>`;
+
+const VC={g:"#76b900",c:"#56d4dd",v:"#bc8cff",a:"#d29922",r:"#f85149"};
+function vbars(title, rows, unit, hint){
+  const max=Math.max(...rows.map(r=>r.max||r.value))||1;
+  const body=rows.map((r,i)=>{const pct=Math.max(2,Math.min(100,100*r.value/max));
+    const col=r.color||`linear-gradient(90deg,${VC.g},${VC.c})`;
+    return `<div class="vrow"><span class="lbl">${r.label}</span><div class="vtrack"><div class="vbar" style="width:${pct}%;background:${col};animation-delay:${(i*0.07).toFixed(2)}s"></div></div><span class="val">${r.value}${unit||''}</span></div>`;
+  }).join("");
+  return `<div class="viz"><h4>${title}</h4>${body}${hint?`<p class="vhint">${hint}</p>`:""}</div>`;
+}
+function vmeter(title, used, total, hint){const pct=Math.min(100,100*used/total);
+  return `<div class="viz"><h4>${title}</h4><div class="meter"><span style="width:${pct}%"></span><div class="ml">${used} / ${total} GB</div></div>${hint?`<p class="vhint">${hint}</p>`:""}</div>`;}
+function vline(title, pts, hint){
+  const W=320,H=110,pad=10,max=Math.max(...pts),min=Math.min(...pts);
+  const X=i=>pad+i*(W-2*pad)/(pts.length-1), Y=v=>pad+(H-2*pad)*(1-(v-min)/((max-min)||1));
+  const d=pts.map((v,i)=>`${i?'L':'M'}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ");
+  const dots=pts.map((v,i)=>`<circle class="pop" cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="2.5" fill="${VC.c}" style="animation-delay:${(0.5+i*0.09).toFixed(2)}s"/>`).join("");
+  return `<div class="viz"><h4>${title}</h4><svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:520px;height:150px"><line x1="${pad}" y1="${H-pad}" x2="${W-pad}" y2="${H-pad}" stroke="#2c3322"/><path class="draw" d="${d}" fill="none" stroke="${VC.c}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>${dots}</svg>${hint?`<p class="vhint">${hint}</p>`:""}</div>`;
+}
+const VIZ={
+ step01: vbars("Tiny instruction set → big behaviour shift (LoRA)",[
+    {label:"examples (this demo)",value:4,max:500},
+    {label:"a solid LoRA set",value:300,max:500,color:`linear-gradient(90deg,${VC.g},${VC.c})`},
+  ],"","50–500 focused examples already move a base model a lot."),
+ step03: vmeter("DGX Spark VRAM — a 3B QLoRA fine-tune", 6, 128,
+    "QLoRA = 4-bit base + tiny adapter → a 3B uses only a few GB; the Spark stays free."),
+ step04: vline("What a healthy training loss looks like",
+    [1.86,1.6,1.3,1.05,0.86,0.72,0.62,0.55,0.5,0.47,0.46],
+    "Loss falls fast then flattens. Your real run streams the actual numbers — this is the shape to expect."),
+ step06: vbars("Domain-specificity — base vs your tuned model (illustrative)",[
+    {label:"base model",value:35,max:100,color:VC.a},
+    {label:"tuned · hvac-assistant",value:88,max:100,color:`linear-gradient(90deg,${VC.g},${VC.c})`},
+  ],"%","The tuned model answers with the house's specific setpoints/priorities — the LoRA paying off."),
+};
 
 function renderContent(){
   const s=STEPS.find(x=>x.id===sel); const c=document.getElementById("content");
@@ -181,6 +413,8 @@ function renderContent(){
   }
   c.innerHTML=`<div class="crumb">${s.group}</div><h2>${s.title} ${lv}</h2>
     ${diagram}
+    ${VIZ[s.id]||""}
+    ${s.kind==="run"?RUNHINT:""}
     <div class="desc">${esc(s.desc||"")}</div>
     ${src}
     <div class="actions">${action}</div>
@@ -234,12 +468,58 @@ async function runStep(id){
 
 async function cleanFiles(){ const r=await jpost("/api/cleanup",{}); alert((r.messages||["cleaned"]).join("\n")); }
 
+function pillText(){ return MODE==="real"?`REAL · ${CONN} · eval on ${MODEL}`:`SIM · ${CONN}`; }
+function fillModels(){
+  const sel=document.getElementById("model-sel"); if(!sel)return; sel.innerHTML="";
+  if(!MODELS.length){ const o=document.createElement("option"); o.textContent="(no models found)"; sel.appendChild(o); sel.disabled=true; return; }
+  sel.disabled=false;
+  MODELS.forEach(m=>{ const o=document.createElement("option"); o.value=m; o.textContent=m; if(m===MODEL)o.selected=true; sel.appendChild(o); });
+}
+async function selectModel(){
+  MODEL=document.getElementById("model-sel").value;
+  await jpost("/api/select_model",{model:MODEL});
+  document.getElementById("mode-txt").textContent=pillText();
+}
+
+function updateSSHpill(){
+  const p=document.getElementById("ssh-pill"); if(!p)return;
+  p.classList.toggle("sshok", !!SSH.configured);
+  document.getElementById("ssh-pill-txt").textContent = SSH.configured
+    ? `SSH ✓ ${SSH.user}@${SSH.host}` : "SSH not set";
+}
+function hostFromUrl(u){ try{ return new URL(u).hostname; }catch(e){ return ""; } }
+function toggleSSH(){
+  const el=document.getElementById("sshpanel"); el.classList.toggle("show");
+  if(el.classList.contains("show")){
+    const v=(id,val)=>{const e=document.getElementById(id); if(e&&val)e.value=val;};
+    // pre-fill host from SSH, or fall back to the host you typed in the Connection panel
+    const derived = hostFromUrl((CONNCFG||{}).url);
+    v("ssh-host", SSH.host || derived); v("ssh-user",SSH.user); v("ssh-port",SSH.port);
+    v("ssh-workdir",SSH.workdir); v("ssh-hfmodel",SSH.hf_model);
+    const st=document.getElementById("ssh-status");
+    if(SSH.configured) st.textContent = "currently: "+SSH.user+"@"+SSH.host;
+    else if(derived && !SSH.host) st.textContent = "host filled from your Connection — add your DGX USER, then Save";
+    else st.textContent = "";
+  }
+}
+async function applySSH(){
+  const g=id=>{const e=document.getElementById(id);return e?e.value.trim():"";};
+  document.getElementById("ssh-status").textContent="saving…";
+  const r=await jpost("/api/ssh",{host:g("ssh-host"),user:g("ssh-user"),port:g("ssh-port"),
+    key:g("ssh-key"),workdir:g("ssh-workdir"),hf_model:g("ssh-hfmodel"),hf_token:g("ssh-hftoken")});
+  SSH=r.ssh||{}; updateSSHpill();
+  document.getElementById("ssh-status").textContent = SSH.configured
+    ? `✓ ${SSH.user}@${SSH.host} · model: ${SSH.hf_model}${SSH.has_token?" · token set":""}`
+    : "⚠ host + user are required";
+}
+
 async function boot(){
-  const r=await jget("/api/steps"); STEPS=r.steps; MODE=r.mode; MODEL=r.model; BASE=r.base_url; CONN=r.conn||"local";
+  const r=await jget("/api/steps"); STEPS=r.steps; MODE=r.mode; MODEL=r.model; BASE=r.base_url; CONN=r.conn||"local"; MODELS=r.models||[]; SSH=r.ssh||{}; CONNCFG=r.conn_inputs||{};
   STEPS.forEach(s=>status[s.id]="idle");
+  fillModels(); updateSSHpill();
   const p=document.getElementById("pill-mode");
   p.classList.toggle("real",MODE==="real"); p.classList.toggle("sim",MODE!=="real");
-  document.getElementById("mode-txt").textContent=MODE==="real"?`REAL · ${CONN} · eval on ${MODEL}`:`SIM · ${CONN} (nothing reachable)`;
+  document.getElementById("mode-txt").textContent=pillText();
   sel=STEPS[0].id; renderSide(); renderContent();
 }
 boot();

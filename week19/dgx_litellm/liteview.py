@@ -46,7 +46,7 @@ def mode_line() -> None:
         _p(f"{S_GW} MODE: REAL · PROXY — a LiteLLM proxy answers at {config.LITELLM_BASE_URL}.")
         _p("  calls go through the gateway; routing is real.")
     elif s == "direct":
-        _p(f"{S_GW} MODE: REAL · DIRECT — no proxy, but a backend is up at {config.BACKEND_URL}.")
+        _p(f"{S_GW} MODE: REAL · DIRECT — no proxy, but a backend is up at {config.safe_backend_url()}.")
         _p(f"  backend connection: {config.CONN} ({config.conn_human()}).")
         _p("  generation is a real local call; routing/keys are shown via the simulator.")
     else:
