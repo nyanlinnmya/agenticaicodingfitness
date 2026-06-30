@@ -84,7 +84,18 @@ def apply_connection(p: dict) -> None:
               "DGX_API_KEY", "EDGE_BASE_URL", "EDGE_API_KEY"):
         os.environ.pop(k, None)
     os.environ["DGX_CONN"] = conn
-    url = (p.get("url") or "").strip()
+    def _norm(u):
+        from urllib.parse import urlparse, urlunparse
+        if not u:
+            return u
+        try:
+            q = urlparse(u)
+            if q.scheme and q.netloc and q.path in ("", "/"):
+                q = q._replace(path="/v1")   # auto-append /v1 if the user omitted it
+            return urlunparse(q)
+        except Exception:
+            return u
+    url = _norm((p.get("url") or "").strip())
     key = (p.get("key") or "").strip()
     auth = (p.get("auth") or "").strip()
     if conn == "tunnel":

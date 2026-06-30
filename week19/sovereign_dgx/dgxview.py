@@ -61,6 +61,25 @@ def _client():
     return OpenAI(base_url=config.BASE_URL, api_key=config.API_KEY, timeout=120.0)
 
 
+def _endpoint_error(e: Exception) -> None:
+    """Friendly diagnostic for a failed call (instead of a raw traceback)."""
+    status = getattr(e, "status_code", None) or getattr(getattr(e, "response", None), "status_code", "")
+    _p("")
+    _p(f"✗ request to the endpoint failed ({type(e).__name__}{f' · HTTP {status}' if status else ''}).")
+    _p(f"  endpoint: {config.safe_base_url()}")
+    if str(status) in ("404", "405") or "Not Allowed" in str(e) or "Not Found" in str(e):
+        _p("  This usually means the URL is missing the PORT and/or the /v1 path — it hit")
+        _p("  a web server, not the model API. The endpoint must be an OpenAI-compatible URL:")
+        _p("    • Ollama →  http://<dgx-host>:11434/v1")
+        _p("    • vLLM   →  http://<dgx-host>:8000/v1")
+        _p("  Fix it in the 🔌 Connection panel (include :PORT and /v1).")
+    elif str(status) == "401":
+        _p("  401 = the endpoint needs auth. For an ngrok --basic-auth tunnel, put creds in")
+        _p("  the URL: https://user:pass@<id>.ngrok-free.app/v1  (or set the API key for cloud).")
+    else:
+        _p("  Check the 🔌 Connection panel: is the host reachable and the URL correct?")
+
+
 def _is_local(url: str) -> bool:
     host = (urlparse(url).hostname or "").lower()
     return host in {"localhost", "127.0.0.1", "::1", "0.0.0.0"} or host.endswith(".local")
@@ -188,28 +207,32 @@ def generate(
         return out
 
     in_reason = in_answer = False
-    stream = _client().chat.completions.create(
-        model=model, messages=messages, max_tokens=max_tokens,
-        temperature=temperature, stream=True,
-    )
-    for chunk in stream:
-        if not chunk.choices:
-            continue
-        delta = chunk.choices[0].delta
-        rs = _extract_reasoning(delta)
-        if rs:
-            if show_reasoning and not in_reason:
-                _p(f"{S_REASON} REASON (private, on-device):"); in_reason = True
-            out.reasoning += rs
-            if show_reasoning:
-                print(rs, end="", flush=True)
-        if getattr(delta, "content", None):
-            if not in_answer:
-                if in_reason:
-                    _p("")
-                _p(f"{S_ANSWER} ANSWER:"); in_answer = True
-            out.answer += delta.content
-            print(delta.content, end="", flush=True)
+    try:
+        stream = _client().chat.completions.create(
+            model=model, messages=messages, max_tokens=max_tokens,
+            temperature=temperature, stream=True,
+        )
+        for chunk in stream:
+            if not chunk.choices:
+                continue
+            delta = chunk.choices[0].delta
+            rs = _extract_reasoning(delta)
+            if rs:
+                if show_reasoning and not in_reason:
+                    _p(f"{S_REASON} REASON (private, on-device):"); in_reason = True
+                out.reasoning += rs
+                if show_reasoning:
+                    print(rs, end="", flush=True)
+            if getattr(delta, "content", None):
+                if not in_answer:
+                    if in_reason:
+                        _p("")
+                    _p(f"{S_ANSWER} ANSWER:"); in_answer = True
+                out.answer += delta.content
+                print(delta.content, end="", flush=True)
+    except Exception as e:  # noqa: BLE001
+        _endpoint_error(e)
+        return out
 
     if in_reason or in_answer:
         _p("")
