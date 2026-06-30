@@ -24,6 +24,37 @@
   .pill.claude .dot{background:var(--amber)} .pill.claude{color:var(--amber)}
   .pill.sim .dot{background:var(--cyan)} .pill.sim{color:var(--cyan)}
   .pill.mem{color:var(--violet)} .pill.mem .dot{background:var(--violet)}
+  .model-sel{font:inherit;font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid var(--line);
+        background:var(--panel2);color:var(--txt);max-width:220px;cursor:pointer}
+  .model-sel:hover{border-color:var(--accent)} .model-sel:disabled{opacity:.5;cursor:not-allowed}
+  .model-lbl{font-size:11px;color:var(--dim)}
+  .lap{color:var(--cyan);font-weight:600} .dgx{color:var(--accent);font-weight:600}
+  .legendbar{padding:6px 20px;font-size:12px;color:var(--dim);background:var(--panel);
+        border-bottom:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .legendbar a{color:var(--accent);cursor:pointer;text-decoration:underline}
+  .runhint{display:flex;gap:10px;align-items:flex-start;margin:0 0 14px;padding:10px 12px;border-radius:8px;
+        background:var(--panel);border:1px solid var(--line);font-size:12.5px;color:#cdd6c2}
+  .runhint a{color:var(--accent);cursor:pointer;text-decoration:underline}
+  .help-ov{position:fixed;inset:0;background:rgba(0,0,0,.62);display:none;z-index:60;padding:28px}
+  .help-ov.show{display:flex;justify-content:center;align-items:flex-start}
+  .help-box{background:var(--panel);border:1px solid var(--line);border-radius:12px;max-width:840px;width:100%;
+        max-height:86vh;overflow:auto;padding:20px 26px;line-height:1.5}
+  .help-box h3{margin:0 0 8px} .help-box h4{margin:16px 0 6px;color:var(--accent)}
+  .help-box code{background:var(--panel2);padding:1px 5px;border-radius:5px;font-size:12px}
+  .help-box pre{background:var(--term);border:1px solid var(--line);border-radius:8px;padding:10px 12px;
+        overflow:auto;font-size:12px;color:#cdd6c2}
+  .help-box table{border-collapse:collapse;width:100%;font-size:12.5px;margin:6px 0}
+  .help-box td,.help-box th{border:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}
+  .help-x{float:right;cursor:pointer;color:var(--dim);font-size:20px;line-height:1}
+  .help-x:hover{color:var(--txt)}
+  .pill.clickable{cursor:pointer} .pill.clickable:hover{border-color:var(--accent)}
+  .conn-modes{display:flex;flex-direction:column;gap:8px;margin:10px 0}
+  .conn-modes label{display:flex;gap:8px;align-items:center;cursor:pointer;font-size:13px}
+  .cf-row{display:flex;flex-direction:column;gap:4px;margin:10px 0}
+  .cf-row label{font-size:12px;color:var(--dim)}
+  .cf-row input,.cf-row select{font:inherit;font-size:13px;padding:7px 9px;border-radius:8px;
+        border:1px solid var(--line);background:var(--panel2);color:var(--txt);width:100%}
+  .cf-hint{font-size:11.5px;color:var(--dim);margin:2px 0 0}
   .tbtn{font:inherit;font-size:12px;font-weight:600;padding:6px 12px;border-radius:8px;cursor:pointer;
         border:1px solid var(--line);background:var(--panel2);color:var(--txt)}
   .tbtn:hover{border-color:var(--accent)} .tbtn.danger:hover{border-color:var(--red);color:var(--red)}
@@ -61,6 +92,19 @@
        border:1px solid var(--green);background:rgba(118,185,0,.16);color:var(--txt)}
   .run:hover:not(:disabled){background:rgba(118,185,0,.30)} .run:disabled{opacity:.45;cursor:not-allowed}
   .note{font-size:12px;color:var(--amber)}
+  .viz{margin:4px 0 18px;padding:14px 16px;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+  .viz h4{margin:0 0 12px;font-size:12.5px;color:var(--accent);font-weight:650}
+  .vrow{display:flex;align-items:center;gap:10px;margin:7px 0;font-size:12px}
+  .vrow .lbl{flex:0 0 160px;text-align:right;color:#cdd6c2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .vtrack{flex:1;background:var(--panel2);border-radius:5px;height:18px;overflow:hidden}
+  .vbar{height:100%;border-radius:5px;width:0;animation:vgrow .9s cubic-bezier(.2,.8,.2,1) forwards}
+  .vrow .val{flex:0 0 70px;color:var(--dim);font-variant-numeric:tabular-nums}
+  @keyframes vgrow{from{width:0}}
+  .vhint{font-size:11.5px;color:var(--dim);margin:9px 0 0}
+  .loopdiag .arrow{position:relative}
+  .loopdiag .arrow::after{content:"";position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;
+        border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);opacity:0;animation:vflow 2.4s linear infinite}
+  @keyframes vflow{0%{opacity:0;transform:translateX(-10px)}30%{opacity:1}70%{opacity:1}100%{opacity:0;transform:translateX(10px)}}
   .term-wrap{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--term)}
   .term-bar{display:flex;align-items:center;gap:8px;padding:7px 12px;background:#0f120b;border-bottom:1px solid var(--line);
             font-size:11px;color:var(--dim)}
@@ -96,19 +140,85 @@
   <h1>▣ Self-Evolving Agent v2</h1>
   <span class="sub">interactive · switchable brain · memory on the DGX · learns over time</span>
   <span class="grow"></span>
-  <span class="pill" id="pill-brain"><span class="dot"></span><span id="brain-txt">brain…</span></span>
+  <span class="model-lbl">model:</span>
+  <select class="model-sel" id="model-sel" onchange="selectModel()" title="local model on the DGX (used when BRAIN=local)"></select>
+  <span class="pill clickable" id="pill-brain" onclick="toggleConn()" title="click to change connection / brain"><span class="dot"></span><span id="brain-txt">brain…</span></span>
   <span class="pill mem" id="pill-mem"><span class="dot"></span><span id="mem-txt">memory…</span></span>
+  <button class="tbtn" onclick="toggleConn()">🔌 Connection</button>
   <button class="tbtn danger" onclick="cleanFiles()">🧹 Reset memory</button>
 </header>
 <div class="progress"><div id="bar"></div></div>
+<div class="legendbar">
+  <span><span class="lap">💻 laptop</span> runs this tutorial · <span class="dgx">🖥️ DGX</span> runs the models — grey shell blocks in chapters are <span class="dgx">DGX</span> commands.</span>
+  <a onclick="toggleHelp()">where do I run each command? ▸</a>
+</div>
 
 <div class="main">
   <nav class="side" id="side"></nav>
   <section class="content" id="content"></section>
 </div>
 
+<div class="help-ov" id="connpanel" onclick="if(event.target.id==='connpanel')toggleConn()">
+ <div class="help-box" style="max-width:560px">
+  <span class="help-x" onclick="toggleConn()">✕</span>
+  <h3>🔌 Connection — where the local brain runs</h3>
+  <p style="font-size:12.5px;color:var(--dim)">Pick where the local model comes from. Connects live and refreshes — no restart. (Cloud → Anthropic gives you Claude.)</p>
+  <div class="conn-modes">
+    <label><input type="radio" name="cmode" value="local" onchange="connFields()"> 💻 <b>Local</b> — scan this laptop's Ollama</label>
+    <label><input type="radio" name="cmode" value="tunnel" onchange="connFields()"> 🌐 <b>Tunnel</b> — your DGX over ngrok (Ollama / vLLM / llama.cpp)</label>
+    <label><input type="radio" name="cmode" value="cloud" onchange="connFields()"> ☁️ <b>Cloud</b> — Claude · Ollama Cloud · OpenRouter</label>
+  </div>
+  <div id="conn-fields"></div>
+  <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
+    <button class="run" onclick="applyConn()">Connect &amp; refresh</button>
+    <span id="conn-status" style="font-size:12px;color:var(--dim)"></span>
+  </div>
+ </div>
+</div>
+
+<div class="help-ov" id="help" onclick="if(event.target.id==='help')toggleHelp()">
+ <div class="help-box">
+  <span class="help-x" onclick="toggleHelp()">✕</span>
+  <h3>💻 vs 🖥️ — where do I run each command?</h3>
+  <p><span class="lap">💻 Your laptop</span> runs <b>this tutorial</b> (the web app you're looking at).
+     <span class="dgx">🖥️ The DGX</span> runs the <b>real models</b>. The laptop talks to the DGX over the
+     connection shown in the pills (top-right).</p>
+  <h4>The golden rule</h4>
+  <ul>
+    <li><span class="lap">💻</span> The <code>… tutorial_server.py</code> command (how you launched this) and any
+        <code>export DGX_… / BRAIN=…</code> run on your <b>laptop</b>.</li>
+    <li><span class="dgx">🖥️</span> Every <b>grey shell block inside a chapter</b> (docker, ollama pull, vllm,
+        nemo, litellm, ngrok…) runs on the <b>DGX</b>. The app only <i>shows</i> them — it never runs them on your laptop.</li>
+  </ul>
+  <h4>Connect this app to your DGX (set on the <span class="lap">💻 laptop</span>, then reload)</h4>
+  <pre># brain: who thinks —  BRAIN=local (DGX) | claude (cloud) | sim (offline)
+# DGX_CONN: how you reach the local model —
+export DGX_CONN=local                          # ① DGX on your LAN / this laptop
+
+export DGX_CONN=tunnel                          # ② DGX over an ngrok tunnel
+export DGX_TUNNEL_URL="https://user:pass@&lt;id&gt;.ngrok-free.app/v1"
+#   🖥️ on the DGX:  ngrok http 11434 --host-header="localhost:11434" --basic-auth="user:pass"
+
+export DGX_CONN=cloud                           # ③ cloud Ollama
+export DGX_CLOUD_URL=https://ollama.com/v1
+export DGX_API_KEY=&lt;key&gt;</pre>
+  <h4>Which machine runs THIS command?</h4>
+  <table>
+    <tr><th>Command</th><th>Run on</th></tr>
+    <tr><td><code>uv pip install …</code> · <code>… tutorial_server.py</code></td><td><span class="lap">💻 laptop</span></td></tr>
+    <tr><td><code>export DGX_CONN / DGX_BASE_URL / BRAIN …</code></td><td><span class="lap">💻 laptop</span></td></tr>
+    <tr><td><code>ollama serve</code> · <code>ngrok http …</code> · <code>tailscale up</code></td><td><span class="dgx">🖥️ DGX</span></td></tr>
+    <tr><td><code>ollama pull/run</code> (big models) · <code>docker run … nvcr.io/…</code></td><td><span class="dgx">🖥️ DGX</span></td></tr>
+    <tr><td><code>vllm serve</code> · <code>nemo…</code> · <code>litellm --config</code> · <code>trtllm-serve</code> · <code>mpirun</code></td><td><span class="dgx">🖥️ DGX</span></td></tr>
+    <tr><td>anything in a chapter's grey box</td><td><span class="dgx">🖥️ DGX</span></td></tr>
+  </table>
+  <p style="color:var(--dim)">Rule of thumb: <b>if it needs a GPU, it's a DGX command.</b> No model running? The app
+     auto-runs in <b>BRAIN=sim</b> so you can still learn everything — every DGX command is shown, none executed locally.</p>
+ </div>
+</div>
+
 <script>
-let STEPS=[], sel=null, BRAIN="sim", MODEL=null, MEM={}, CONN="local";
+let STEPS=[], sel=null, BRAIN="sim", MODEL=null, MEM={}, CONN="local", MODELS=[];
 const status={}, termCache={}, srcCache={};
 const ICON={idle:"○",running:'<span class="sp"></span>',pass:"✓",fail:"✕"};
 
@@ -150,6 +260,52 @@ function renderSide(){
   document.getElementById("bar").style.width=(runnable.length?100*done/runnable.length:0)+"%";
 }
 function select(id){ sel=id; renderSide(); renderContent(); }
+function toggleHelp(){ document.getElementById("help").classList.toggle("show"); }
+const CLOUD_PROV={ollama_cloud:"https://ollama.com/v1",openrouter:"https://openrouter.ai/api/v1",anthropic:"https://api.anthropic.com/v1",custom:""};
+function toggleConn(){
+  const el=document.getElementById("connpanel"); el.classList.toggle("show");
+  if(el.classList.contains("show")){
+    const r=document.querySelector(`input[name=cmode][value="${CONN}"]`)||document.querySelector('input[name=cmode][value="local"]');
+    if(r)r.checked=true; connFields(); document.getElementById("conn-status").textContent="";
+  }
+}
+function connProvider(){ const p=document.getElementById("cf-prov").value, u=document.getElementById("cf-url"); if(u&&p!=="custom")u.value=CLOUD_PROV[p]; }
+function connFields(){
+  const mode=(document.querySelector('input[name=cmode]:checked')||{}).value||"local";
+  const f=document.getElementById("conn-fields");
+  if(mode==="local"){
+    f.innerHTML=`<div class="cf-row"><label>Ollama URL</label><input id="cf-url" value="http://localhost:11434/v1"></div>
+      <p class="cf-hint">Scans this laptop's Ollama (start it with <code>ollama serve</code>).</p>`;
+  }else if(mode==="tunnel"){
+    f.innerHTML=`<div class="cf-row"><label>Tunnel URL (include /v1)</label><input id="cf-url" placeholder="https://&lt;id&gt;.ngrok-free.app/v1"></div>
+      <div class="cf-row"><label>Basic auth (user:pass, optional — ngrok --basic-auth)</label><input id="cf-auth" placeholder="dgx:agenticai"></div>
+      <p class="cf-hint">Reaches your DGX. Works for Ollama (:11434), vLLM/llama.cpp (:8000/:8080) — all OpenAI-compatible.</p>`;
+  }else{
+    f.innerHTML=`<div class="cf-row"><label>Provider</label><select id="cf-prov" onchange="connProvider()">
+        <option value="ollama_cloud">Ollama Cloud</option><option value="openrouter">OpenRouter</option>
+        <option value="anthropic">Anthropic (Claude)</option><option value="custom">Custom (OpenAI-compatible)</option></select></div>
+      <div class="cf-row"><label>Endpoint URL</label><input id="cf-url" value="https://ollama.com/v1"></div>
+      <div class="cf-row"><label>API key</label><input id="cf-key" type="password" placeholder="sk-…"></div>
+      <p class="cf-hint">⚠ Cloud runs off your hardware — convenient, not sovereign.</p>`;
+  }
+}
+async function applyConn(){
+  const mode=(document.querySelector('input[name=cmode]:checked')||{}).value||"local";
+  const g=id=>{const e=document.getElementById(id);return e?e.value.trim():"";};
+  document.getElementById("conn-status").textContent="connecting…";
+  let r; try{ r=await jpost("/api/connect",{conn:mode,url:g("cf-url"),key:g("cf-key"),auth:g("cf-auth")}); }
+  catch(e){ document.getElementById("conn-status").textContent="error: "+e.message; return; }
+  await refreshConn();
+  document.getElementById("conn-status").textContent = r.endpoint_up
+    ? `✓ connected · ${r.conn} · ${(r.models||[]).length} model(s)` : "⚠ not reachable — running in SIM";
+}
+async function refreshConn(){
+  const r=await jget("/api/steps"); BRAIN=r.brain; CONN=r.conn||"local"; MODEL=r.model; MODELS=r.models||[];
+  fillModels();
+  const pb=document.getElementById("pill-brain"); pb.className="pill "+BRAIN;
+  pb.querySelector("#brain-txt").textContent=brainText();
+}
+const RUNHINT=`<div class="runhint"><span class="dgx">🖥️/💻</span><div><b>Where this runs:</b> clicking <b>Run</b> executes on your <span class="lap">💻 laptop</span>; with <code>BRAIN=local</code> it calls your DGX over the current connection (with <code>BRAIN=sim</code> it's fully offline). The <span class="dgx">🖥️ grey shell blocks</span> in the output are commands for the <b>DGX</b>. <a onclick="toggleHelp()">where do I run each command? ▸</a></div></div>`;
 function lvClass(l){ if(!l)return "all"; if(l.startsWith("begin"))return "beginner";
   if(l.startsWith("inter"))return "intermediate"; if(l.startsWith("adv"))return "advanced"; return "all"; }
 
@@ -160,6 +316,34 @@ const FLOW=`<div class="loopdiag">
   <span class="node c">CONSOLIDATE → facts + skills</span>
   <span class="arrow">↺</span><span class="nocloud">each run starts smarter · all on the DGX</span>
 </div>`;
+
+const VC={g:"#76b900",c:"#56d4dd",v:"#bc8cff",a:"#d29922",r:"#f85149"};
+function vbars(title, rows, unit, hint){
+  const max=Math.max(...rows.map(r=>r.max||r.value))||1;
+  const body=rows.map((r,i)=>{const pct=Math.max(2,Math.min(100,100*r.value/max));
+    const col=r.color||`linear-gradient(90deg,${VC.g},${VC.c})`;
+    return `<div class="vrow"><span class="lbl">${r.label}</span><div class="vtrack"><div class="vbar" style="width:${pct}%;background:${col};animation-delay:${(i*0.07).toFixed(2)}s"></div></div><span class="val">${r.value}${unit||''}</span></div>`;
+  }).join("");
+  return `<div class="viz"><h4>${title}</h4>${body}${hint?`<p class="vhint">${hint}</p>`:""}</div>`;
+}
+function memBars(title, hint){
+  const e=MEM.episodes||0,f=MEM.facts||0,k=MEM.skills||0;
+  return vbars(title,[
+    {label:"episodes (raw log)",value:e,max:Math.max(8,e)},
+    {label:"facts (consolidated)",value:f,max:Math.max(8,e),color:VC.c},
+    {label:"skills (self-written)",value:k,max:Math.max(4,k),color:VC.v},
+  ],"",hint);
+}
+const VIZ={
+ step02: ()=>memBars("Memory on the DGX right now",
+    "Run steps and watch this grow — episodic logs first, then consolidation adds facts + skills."),
+ step03: ()=>memBars("Memory after consolidation (live)",
+    "Consolidation turns raw episodes into durable facts + a reusable skill."),
+ step05: vbars("Answer specificity — cold (no memory) vs warm (recall) · illustrative",[
+    {label:"cold agent",value:30,max:100,color:VC.a},
+    {label:"warm agent",value:90,max:100,color:`linear-gradient(90deg,${VC.g},${VC.c})`},
+  ],"%","The warm agent recalls the house's policy → far more specific. Accumulated, on-DGX memory paying off."),
+};
 
 function renderContent(){
   const s=STEPS.find(x=>x.id===sel); const c=document.getElementById("content");
@@ -180,6 +364,8 @@ function renderContent(){
   }
   c.innerHTML=`<div class="crumb">${s.group}</div><h2>${s.title} ${lv}</h2>
     ${diagram}
+    ${(typeof VIZ[s.id]==='function')?VIZ[s.id]():(VIZ[s.id]||"")}
+    ${s.kind==="run"?RUNHINT:""}
     <div class="desc">${esc(s.desc||"")}</div>
     ${src}
     <div class="actions">${action}</div>
@@ -234,13 +420,27 @@ async function runStep(id){
 
 async function cleanFiles(){ const r=await jpost("/api/cleanup",{}); alert((r.messages||["reset"]).join("\n")); boot(true); }
 
+function brainText(){ return BRAIN==="local"?`brain: ${MODEL} · ${CONN}`
+  : BRAIN==="claude"?"brain: Claude (cloud)":"brain: sim (offline)"; }
+function fillModels(){
+  const sel=document.getElementById("model-sel"); if(!sel)return; sel.innerHTML="";
+  if(!MODELS.length){ const o=document.createElement("option"); o.textContent="(no models found)"; sel.appendChild(o); sel.disabled=true; return; }
+  sel.disabled=false;
+  MODELS.forEach(m=>{ const o=document.createElement("option"); o.value=m; o.textContent=m; if(m===MODEL)o.selected=true; sel.appendChild(o); });
+}
+async function selectModel(){
+  MODEL=document.getElementById("model-sel").value;
+  await jpost("/api/select_model",{model:MODEL});
+  const bt=document.getElementById("brain-txt"); if(bt) bt.textContent=brainText();
+}
+
 async function boot(refresh){
-  const r=await jget("/api/steps"); STEPS=r.steps; BRAIN=r.brain; MODEL=r.model; MEM=r.memory||{}; CONN=r.conn||"local";
+  const r=await jget("/api/steps"); STEPS=r.steps; BRAIN=r.brain; MODEL=r.model; MEM=r.memory||{}; CONN=r.conn||"local"; MODELS=r.models||[];
   if(!refresh) STEPS.forEach(s=>status[s.id]="idle");
+  fillModels();
   const pb=document.getElementById("pill-brain");
   pb.className="pill "+BRAIN;
-  pb.querySelector("#brain-txt").textContent = BRAIN==="local"?`brain: ${MODEL} · ${CONN}`
-    : BRAIN==="claude"?"brain: Claude (cloud)":"brain: sim (offline)";
+  pb.querySelector("#brain-txt").textContent = brainText();
   document.getElementById("mem-txt").textContent=`mem: ${MEM.episodes||0} ep · ${MEM.facts||0} facts · ${MEM.skills||0} skills`;
   if(!refresh){ sel=STEPS[0].id; }
   renderSide(); if(!refresh) renderContent();

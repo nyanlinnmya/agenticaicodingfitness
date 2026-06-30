@@ -42,7 +42,7 @@ def mode_line() -> None:
         _p(f"  connection: {config.CONN} ({config.conn_human()}) — nothing reachable yet.")
     else:
         _p(f"{S} MODE: REAL · connection = {config.CONN} ({config.conn_human()}).")
-        _p(f"  agent calls {config.MODEL} @ {config.BASE_URL}.")
+        _p(f"  agent calls {config.MODEL} @ {config.safe_base_url()}.")
     px = "up ✓" if config.phoenix_up() else "not running (we render the tree locally)"
     _p(f"  Phoenix at {config.PHOENIX_ENDPOINT}: {px}")
     _p("")

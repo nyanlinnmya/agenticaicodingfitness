@@ -27,7 +27,7 @@ def is_sovereign() -> bool:
 def where() -> str:
     if config.BRAIN == "local":
         return (f"local model ({config.MODEL}) via the '{config.CONN}' connection "
-                f"({config.conn_human()}) @ {config.BASE_URL}")
+                f"({config.conn_human()}) @ {config.safe_base_url()}")
     if config.BRAIN == "claude":
         return f"Claude ({config.CLAUDE_MODEL}) in the cloud — prompts DO leave the box"
     return "simulated brain (no model) — fully offline, $0"

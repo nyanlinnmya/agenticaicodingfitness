@@ -87,7 +87,7 @@ def mode_line(model: str | None = None) -> None:
         _p(f"  the commands shown are exactly what you'd run on real hardware.")
     else:
         _p(f"{S_DGX} MODE: REAL · connection = {config.CONN} ({config.conn_human()}).")
-        _p(f"  endpoint: {config.BASE_URL}   model: {model}   cloud cost: $0.0000")
+        _p(f"  endpoint: {config.safe_base_url()}   model: {model}   cloud cost: $0.0000")
     _p("")
 
 
@@ -228,11 +228,15 @@ def sovereignty_line(model: str | None = None) -> None:
     if is_sim():
         _p(f"{S_DGX} LOCAL ✓ (simulated) — in REAL mode this proves the call never left your DGX.")
         return
-    local = _is_local(config.BASE_URL)
-    mark = "LOCAL ✓ data never leaves your DGX" if local else \
-           "REMOTE ⚠ this endpoint is NOT local — not sovereign!"
+    conn = config.CONN
+    if conn == "local":
+        mark = "LOCAL ✓ on your DGX — data never leaves the box"
+    elif conn == "tunnel":
+        mark = "TUNNEL ✓ your DGX reached over an encrypted tunnel — still YOUR hardware, still sovereign"
+    else:  # cloud
+        mark = "CLOUD ⚠ a hosted provider — NOT your hardware (convenient, but not sovereign)"
     _p(f"{S_DGX} {mark}")
-    _p(f"  endpoint: {config.BASE_URL}   model: {model}   cloud cost: $0.0000")
+    _p(f"  endpoint: {config.safe_base_url()}   model: {model}   cloud cost: $0.0000")
     _p("")
 
 

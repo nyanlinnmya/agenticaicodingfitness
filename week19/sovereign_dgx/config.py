@@ -70,11 +70,84 @@ def conn_human() -> str:
             "cloud": "cloud provider"}.get(CONN, CONN)
 
 
+def safe_base_url() -> str:
+    """BASE_URL with any password masked, safe to print in the UI/logs."""
+    p = urlparse(BASE_URL)
+    if not p.username:
+        return BASE_URL
+    netloc = p.hostname or ""
+    if p.port:
+        netloc += f":{p.port}"
+    return p._replace(netloc=f"{p.username}:***@{netloc}").geturl()
+
+
+def _with_userinfo(url: str, auth: str) -> str:
+    """Inject 'user:pass' into a URL's host (for ngrok --basic-auth tunnels)."""
+    p = urlparse(url)
+    netloc = p.hostname or ""
+    if p.port:
+        netloc += f":{p.port}"
+    return p._replace(netloc=f"{auth}@{netloc}").geturl()
+
+
+def apply_connection(p: dict) -> None:
+    """Re-point the connection at RUNTIME from a UI request, then re-detect.
+
+    Sets the env vars (so demo subprocesses inherit the new connection) and
+    recomputes CONN/BASE_URL/API_KEY/MODE/MODEL in this process.
+    """
+    global CONN, BASE_URL, API_KEY, MODE, MODEL
+    conn = (p.get("conn") or "local").lower()
+    for k in ("DGX_CONN", "DGX_BASE_URL", "DGX_TUNNEL_URL", "DGX_CLOUD_URL",
+              "DGX_API_KEY", "EDGE_BASE_URL", "EDGE_API_KEY"):
+        os.environ.pop(k, None)
+    os.environ["DGX_CONN"] = conn
+    url = (p.get("url") or "").strip()
+    key = (p.get("key") or "").strip()
+    auth = (p.get("auth") or "").strip()          # "user:pass" for tunnel basic-auth
+    if conn == "tunnel":
+        if auth and url and "@" not in url.split("//", 1)[-1]:
+            url = _with_userinfo(url, auth)
+        if url:
+            os.environ["DGX_TUNNEL_URL"] = url
+        if key:
+            os.environ["DGX_API_KEY"] = key
+    elif conn == "cloud":
+        if url:
+            os.environ["DGX_CLOUD_URL"] = url
+        if key:
+            os.environ["DGX_API_KEY"] = key
+    else:                                          # local
+        if url:
+            os.environ["DGX_BASE_URL"] = url
+    CONN, BASE_URL, API_KEY = _resolve_connection()
+    MODE = mode()
+    MODEL = pick_model()
+
+
 def _open(url: str, timeout: float = 4):
-    """urlopen that adds a bearer header for tunnel/cloud endpoints that need auth."""
-    headers = {}
-    if API_KEY and CONN != "local":
+    """urlopen that authenticates tunnel/cloud endpoints.
+
+    Supports HTTP Basic via creds in the URL (https://user:pass@host) or a
+    DGX_API_KEY of the form "user:pass" (e.g. ngrok --basic-auth), else Bearer.
+    """
+    import base64
+    headers, p = {}, urlparse(url)
+    user, pwd = p.username, p.password
+    if user is None and API_KEY and ":" in API_KEY and CONN != "local":
+        user, pwd = API_KEY.split(":", 1)
+    if user is not None:
+        headers["Authorization"] = "Basic " + base64.b64encode(
+            f"{user}:{pwd or ''}".encode()).decode()
+        netloc = p.hostname or ""
+        if p.port:
+            netloc += f":{p.port}"
+        url = p._replace(netloc=netloc).geturl()       # strip userinfo for urllib
+    elif API_KEY and CONN != "local":
         headers["Authorization"] = f"Bearer {API_KEY}"
+    if (p.hostname or "").endswith("anthropic.com") and API_KEY and ":" not in API_KEY:
+        headers["x-api-key"] = API_KEY              # Anthropic uses x-api-key, not Bearer
+        headers["anthropic-version"] = "2023-06-01"
     return urlopen(Request(url, headers=headers), timeout=timeout)
 
 # Models we'd reach for on a DGX Spark, best-first. Auto-detected at import.

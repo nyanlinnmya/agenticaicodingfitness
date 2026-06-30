@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""PART 6 · Evaluate — before vs after domain adaptation  [ADVANCED]
+"""STEP 6 · 💻 Evaluate — base vs your tuned model (REAL)  [ADVANCED]
 
-The only honest measure of fine-tuning is behaviour on held-out questions. Since
-we can't ship a real LoRA to your laptop, this demo demonstrates the EFFECT a
-domain LoRA bakes in by contrasting the SAME base model with vs without the domain
-system prompt — the steering a LoRA makes permanent. In REAL mode it's a live
-local model; in SIM it's stubbed. Either way you see the before/after gap.
+The honest test of fine-tuning: behaviour on held-out questions. If the tuned
+model ('hvac-assistant' from STEP 5) is reachable on the current connection, this
+asks the SAME questions to the BASE model and to the TUNED model and shows the
+difference — real calls over your connection. Otherwise it contrasts a generic vs
+domain system prompt so you still see the effect.
 
 Run:  python demos/step06_evaluate.py
 """
@@ -19,47 +19,70 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import config  # noqa: E402
 import ftview  # noqa: E402
 
-DOMAIN_SYSTEM = (
-    "You are HotelHVAC-Assistant, fine-tuned on smart-hotel HVAC SOPs. Answer with "
-    "SPECIFIC setpoints, thresholds (°C, Pa), and alarm priorities (CRITICAL/ROUTINE). "
-    "Be terse and operational."
-)
-EVAL_QUESTIONS = [
+TUNED = "hvac-assistant"
+DOMAIN_SYSTEM = ("You are HotelHVAC-Assistant, fine-tuned on smart-hotel HVAC SOPs. "
+                 "Answer with SPECIFIC setpoints, thresholds (°C, Pa), and alarm "
+                 "priorities (CRITICAL/ROUTINE). Be terse and operational.")
+QUESTIONS = [
     "Filter ΔP is 260 Pa — what alarm priority and what action?",
     "A guest room is stuck at 26 °C with the fan-coil maxed. First two moves?",
 ]
 
 
+def ask(model: str, system: str, q: str) -> str:
+    client = ftview._client()
+    r = client.chat.completions.create(
+        model=model, max_tokens=200, temperature=0.3,
+        messages=[{"role": "system", "content": system}, {"role": "user", "content": q}])
+    msg = r.choices[0].message
+    return (msg.content or getattr(msg, "reasoning", "") or "").strip()
+
+
 def main() -> None:
-    ftview.banner("PART 6", "Evaluate — before vs after", "ADVANCED")
+    print("━" * 64)
+    print("  STEP 6 · 💻 Evaluate — base vs tuned (real)")
+    print("━" * 64, "\n")
     ftview.mode_line()
-    ftview.require_runtime()
 
-    print("We contrast the SAME model with vs without the domain behaviour a LoRA")
-    print("bakes in. The 'after' column is what fine-tuning makes permanent.\n")
+    if ftview.is_sim():
+        print("No live endpoint — showing the SIM contrast (generic vs domain prompt).")
+        print("Connect to your DGX (where 'hvac-assistant' is served) for a REAL eval.\n")
+        for i, q in enumerate(QUESTIONS, 1):
+            print(f"── Q{i}: {q}")
+            print("  BEFORE:"); ftview.generate([{"role": "system", "content": "You are a helpful assistant."},
+                                                 {"role": "user", "content": q}], max_tokens=120, label="(generic)")
+            print("  AFTER:"); ftview.generate([{"role": "system", "content": DOMAIN_SYSTEM},
+                                                {"role": "user", "content": q}], max_tokens=120, label="(domain)")
+            print()
+        return
 
-    for i, q in enumerate(EVAL_QUESTIONS, 1):
-        print(f"── Q{i}: {q}")
-        print("\n  BEFORE (base model, no domain adaptation):")
-        ftview.generate(
-            [{"role": "system", "content": "You are a helpful assistant."},
-             {"role": "user", "content": q}],
-            max_tokens=160, label="(generic answer)")
-        print("\n  AFTER (domain-adapted behaviour):")
-        ftview.generate(
-            [{"role": "system", "content": DOMAIN_SYSTEM},
-             {"role": "user", "content": q}],
-            max_tokens=160, label="(domain answer — specific setpoints + priority)")
-        print()
+    models = config.list_local_models()
+    tuned = TUNED if TUNED in models else None
+    base = next((m for m in models if m != TUNED), config.MODEL)
 
-    print("Scoring fine-tuning properly (what you'd automate in CI):")
-    print("  • Build a golden set of domain Q&A held out from training.")
-    print("  • Score with an LLM-judge or exact-match on key facts (setpoints, priorities).")
-    print("  • Gate: tuned model must beat base by X% AND not regress on general questions.")
-    print("  • (This is exactly the eval discipline from Weeks 10 & 15 — applied to FT.)")
+    if tuned:
+        print(f"Comparing BASE ({base}) vs TUNED ({tuned}) — real calls:\n")
+        for i, q in enumerate(QUESTIONS, 1):
+            print(f"── Q{i}: {q}")
+            print(f"\n  BEFORE — {base}:")
+            print("   ", ask(base, "You are a helpful assistant.", q).replace("\n", "\n    "))
+            print(f"\n  AFTER  — {tuned} (your fine-tune):")
+            print("   ", ask(tuned, "You are HotelHVAC-Assistant.", q).replace("\n", "\n    "))
+            print()
+        print("The TUNED model should answer with the house's specific setpoints/priorities")
+        print("without needing a big system prompt — that's what the LoRA baked in.")
+    else:
+        print(f"'{TUNED}' not found on this connection (run STEPS 4–5 to create + serve it).")
+        print(f"Showing the domain-prompt contrast on {base} instead:\n")
+        for i, q in enumerate(QUESTIONS, 1):
+            print(f"── Q{i}: {q}")
+            print(f"\n  BEFORE — generic:\n    " + ask(base, "You are a helpful assistant.", q).replace("\n", "\n    "))
+            print(f"\n  AFTER  — domain prompt:\n    " + ask(base, DOMAIN_SYSTEM, q).replace("\n", "\n    "))
+            print()
 
-    print("\nTakeaway: a LoRA makes the 'after' behaviour permanent and on-prem — no")
-    print("system-prompt babysitting, no cloud. Next: export and serve it sovereignly.")
+    print("Gate it in CI: tuned must beat base on a golden set AND not regress on general Qs.")
+    print("\nTakeaway: only the held-out eval proves the fine-tune worked — and here it")
+    print("ran on YOUR model, on YOUR DGX, end to end.")
 
 
 if __name__ == "__main__":
